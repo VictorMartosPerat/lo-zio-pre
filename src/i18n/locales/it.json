@@ -189,7 +189,9 @@
     "title": "Il Tuo Ordine",
     "empty": "Il tuo carrello è vuoto",
     "total": "Totale",
-    "checkout": "Effettua Ordine"
+    "checkout": "Effettua Ordine",
+    "addMorePizza": "Ti manca un'altra pizza?",
+    "upsellTitle": "Vuoi aggiungere qualcosa in più?"
   },
   "checkout": {
     "emptyTitle": "Il tuo carrello è vuoto",
@@ -236,7 +238,8 @@
     "cardDetails": "Dati della carta",
     "stripeSecure": "Pagamento sicuro gestito da Stripe",
     "stripeNotLoaded": "Sistema di pagamento non disponibile. Ricarica la pagina.",
-    "stripeError": "Errore nel pagamento. Controlla i dati della tua carta."
+    "stripeError": "Errore nel pagamento. Controlla i dati della tua carta.",
+    "addressSuggestionHint": "Suggerimento orientativo — verifica l'indirizzo prima di confermare"
   },
   "admin": {
     "title": "Pannello di Amministrazione",
@@ -256,7 +259,7 @@
     "statusPending": "In attesa",
     "statusConfirmed": "Confermata",
     "statusCancelled": "Cancellata",
-    "confirmSuccess": "Prenotazione confermata - WhatsApp inviato al cliente",
+    "confirmSuccess": "Prenotazione confermata",
     "confirmError": "Errore nella conferma della prenotazione",
     "statusUpdated": "Stato aggiornato",
     "statusError": "Errore nell'aggiornamento dello stato",
@@ -373,7 +376,7 @@
     "createReservation": "Crea Prenotazione",
     "reservationCreated": "Prenotazione creata correttamente",
     "reservationError": "Errore nella creazione della prenotazione",
-    "confirmSuccess": "Prenotazione confermata - WhatsApp inviato al cliente",
+    "confirmSuccess": "Prenotazione confermata",
     "confirmError": "Errore nella conferma della prenotazione",
     "cancelSuccess": "Prenotazione cancellata",
     "cancelError": "Errore nell'annullamento",
@@ -464,5 +467,17 @@
     "contactReminder": "Ti invieremo una conferma a {{email}}",
     "backHome": "Torna alla home",
     "notFound": "Ordine non trovato"
+  },
+  "dialog": {
+    "addExtras": "Aggiungi un extra",
+    "addNote": "Aggiungi una nota per la cucina",
+    "editNote": "Modifica nota",
+    "notePlaceholder": "Es: senza cipolla, ben cotto, poco pomodoro...",
+    "addToCart": "Aggiungi al carrello",
+    "drinksSection": "Non dimenticare da bere!",
+    "dessertSection": "Il tocco dolce",
+    "tiramisuDesc": "Fatto in casa · artigianale",
+    "addExtrasCustom": "Scegli i tuoi ingredienti",
+    "freeCounter": "{{count}}/{{max}} inclusi · i successivi sono a pagamento"
   }
 }

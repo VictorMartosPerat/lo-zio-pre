@@ -15,7 +15,8 @@ export default {
     extend: {
       fontFamily: {
         display: ['Playfair Display', 'Georgia', 'serif'],
-        body: ['Lato', 'Helvetica Neue', 'sans-serif'],
+        body: ['Inter', 'Helvetica Neue', 'sans-serif'],
+        quote: ['Sacramento', 'cursive'],
       },
       colors: {
         border: "hsl(var(--border))",

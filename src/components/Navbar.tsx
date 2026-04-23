@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import { Menu, X, ChevronDown, UserCircle, LogOut, CalendarIcon } from "lucide-react";
+import { Menu, X, ChevronDown, UserCircle, LogOut, CalendarIcon, ShoppingBag } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import {
   DropdownMenu,
@@ -34,9 +34,7 @@ const Navbar = ({ forceSolid = false }: { forceSolid?: boolean }) => {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        (forceSolid || scrolled) ? "bg-foreground/95 backdrop-blur-sm py-3 shadow-lg" : "bg-transparent py-6"
-      }`}
+      className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-foreground/95 backdrop-blur-sm py-3 shadow-lg"
     >
       <div className="max-w-6xl mx-auto px-4 flex items-center justify-between">
         <a href="/" className="flex items-center">
@@ -145,6 +143,16 @@ const Navbar = ({ forceSolid = false }: { forceSolid?: boolean }) => {
                   </a>
                 </DropdownMenuItem>
                 <div className="mx-4 h-px bg-primary-foreground/10" />
+                <DropdownMenuItem asChild className="p-0 focus:bg-transparent">
+                  <a
+                    href="/mis-pedidos"
+                    className="flex items-center gap-3 px-5 py-4 hover:bg-primary/10 transition-all duration-200 cursor-pointer"
+                  >
+                    <ShoppingBag className="w-5 h-5 text-primary-foreground/60" />
+                    <span className="font-body text-sm text-primary-foreground">Mis pedidos</span>
+                  </a>
+                </DropdownMenuItem>
+                <div className="mx-4 h-px bg-primary-foreground/10" />
                 <DropdownMenuItem
                   onClick={handleSignOut}
                   className="p-0 focus:bg-transparent cursor-pointer"
@@ -233,6 +241,14 @@ const Navbar = ({ forceSolid = false }: { forceSolid?: boolean }) => {
               >
                 <CalendarIcon className="w-5 h-5" />
                 {t("nav.myReservations")}
+              </a>
+              <a
+                href="/mis-pedidos"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-2 text-primary-foreground/80 hover:text-primary-foreground font-body text-sm uppercase tracking-widest"
+              >
+                <ShoppingBag className="w-5 h-5" />
+                Mis pedidos
               </a>
               <button
                 onClick={() => { setMenuOpen(false); handleSignOut(); }}

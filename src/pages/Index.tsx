@@ -14,8 +14,9 @@ const Index = () => {
   });
 
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative" style={{ overflowX: "clip" }}>
       <PullToRefreshIndicator pullDistance={pullDistance} refreshing={refreshing} />
+      <Navbar />
       <div
         className="min-h-screen bg-background landscape-compact"
         style={{
@@ -23,7 +24,6 @@ const Index = () => {
           transition: isAnimating ? "transform 0.3s ease" : "none",
         }}
       >
-        <Navbar />
         <HeroSection />
         <MenuSection />
         <ReservationSection />

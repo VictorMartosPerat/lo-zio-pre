@@ -39,62 +39,6 @@ serve(async (req) => {
 
     if (updateError) throw new Error(`Update failed: ${updateError.message}`);
 
-    // 3. Send WhatsApp template message to customer
-    const WHATSAPP_TOKEN = Deno.env.get("WHATSAPP_TOKEN");
-    const WHATSAPP_PHONE_ID = Deno.env.get("WHATSAPP_PHONE_ID");
-
-    if (!WHATSAPP_TOKEN || !WHATSAPP_PHONE_ID) {
-      throw new Error("Missing WhatsApp environment variables");
-    }
-
-    // Format date nicely (YYYY-MM-DD -> DD/MM/YYYY)
-    const dateParts = reservation.reservation_date.split("-");
-    const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
-
-    // Format time (HH:MM:SS -> HH:MM)
-    const formattedTime = reservation.reservation_time.substring(0, 5);
-
-    const customerPhone = reservation.phone.replace(/[\s\-()]/g, "");
-
-    const whatsappResponse = await fetch(
-      `https://graph.facebook.com/v19.0/${WHATSAPP_PHONE_ID}/messages`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${WHATSAPP_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messaging_product: "whatsapp",
-          to: customerPhone,
-          type: "template",
-          template: {
-            name: "reserva_confirmada",
-            language: { code: "es" },
-            components: [
-              {
-                type: "body",
-                parameters: [
-                  { type: "text", text: formattedDate },
-                  { type: "text", text: formattedTime },
-                  { type: "text", text: reservation.guests },
-                ],
-              },
-            ],
-          },
-        }),
-      }
-    );
-
-    const whatsappResult = await whatsappResponse.json();
-
-    if (!whatsappResponse.ok) {
-      console.error("WhatsApp API error:", JSON.stringify(whatsappResult));
-      throw new Error(`WhatsApp error: ${whatsappResult.error?.message || "Unknown"}`);
-    }
-
-    console.log("WhatsApp confirmation sent:", JSON.stringify(whatsappResult));
-
     return new Response(
       JSON.stringify({ success: true }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }

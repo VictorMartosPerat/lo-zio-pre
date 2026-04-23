@@ -26,7 +26,11 @@ interface Product {
   sort_order: number | null;
 }
 
-const CATEGORIES = ["pizzas", "focaccias", "calzones"] as const;
+const CATEGORIES = ["pizzas", "focaccias", "calzones", "extras", "drinks", "desserts"] as const;
+const CATEGORY_LABELS: Record<string, string> = {
+  pizzas: "Pizzas", focaccias: "Focaccias", calzones: "Calzones",
+  extras: "Extras", drinks: "Bebidas", desserts: "Postres",
+};
 const BADGE_STYLES = ["", "fire", "gold", "teal"] as const;
 
 const emptyProduct: Omit<Product, "id"> = {
@@ -164,7 +168,7 @@ const AdminProducts = () => {
               key={c}
               onClick={() => setFilterCategory(c)}
               className={`px-3 py-1.5 rounded-full text-sm font-body capitalize transition-colors ${filterCategory === c ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
-            >{c} ({count})</button>
+            >{CATEGORY_LABELS[c] ?? c} ({count})</button>
           );
         })}
       </div>
@@ -181,7 +185,7 @@ const AdminProducts = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="font-display text-lg text-foreground">{p.name}</h3>
-                    <Badge variant="outline" className="capitalize text-xs">{p.category}</Badge>
+                    <Badge variant="outline" className="text-xs">{CATEGORY_LABELS[p.category] ?? p.category}</Badge>
                     {p.badge_emoji && <span className="text-base">{p.badge_emoji}</span>}
                     {!p.is_active && <Badge variant="secondary" className="text-xs">Oculto</Badge>}
                   </div>
@@ -242,7 +246,7 @@ const AdminProducts = () => {
                   onChange={(e) => setForm({ ...form, category: e.target.value })}
                   className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm font-body"
                 >
-                  {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  {CATEGORIES.map((c) => <option key={c} value={c}>{CATEGORY_LABELS[c] ?? c}</option>)}
                 </select>
               </div>
             </div>

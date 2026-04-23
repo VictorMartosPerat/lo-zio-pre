@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,11 +21,14 @@ const Auth = () => {
   const [appleLoading, setAppleLoading] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useTranslation();
 
+  const fromCart = location.state?.fromCart === true;
+
   useEffect(() => {
-    if (user) navigate('/perfil');
-  }, [user, navigate]);
+    if (user) navigate(fromCart ? '/pedido' : '/perfil');
+  }, [user, navigate, fromCart]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,6 +99,23 @@ const Auth = () => {
             {isLogin ? t('auth.loginTitle') : t('auth.signupTitle')}
           </p>
         </div>
+
+        {fromCart && (
+          <div className="bg-menu-teal/10 border border-menu-teal/30 rounded-lg px-4 py-4 mb-4 text-center">
+            <p className="text-primary-foreground font-display font-bold text-sm mb-1">
+              🍕 Inicia sesión para completar tu pedido
+            </p>
+            <p className="text-primary-foreground/80 text-xs mb-3">
+              Podrás seguir el estado en tiempo real y acumular puntos de recompensa.
+            </p>
+            <Link
+              to="/pedido"
+              className="text-primary-foreground/60 text-xs underline underline-offset-2 hover:text-primary-foreground/90 transition-colors"
+            >
+              Continuar sin cuenta — no recibiré actualizaciones del pedido
+            </Link>
+          </div>
+        )}
 
         <div className="bg-card rounded-lg p-8 shadow-lg border border-border">
           <div className="flex flex-col gap-3 mb-6">

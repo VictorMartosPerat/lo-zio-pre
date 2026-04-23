@@ -208,7 +208,9 @@
     "title": "Tu Pedido",
     "empty": "Tu carrito está vacío",
     "total": "Total",
-    "checkout": "Realizar Pedido"
+    "checkout": "Realizar Pedido",
+    "addMorePizza": "¿Te falta otra pizza?",
+    "upsellTitle": "¿Quieres añadir algo más?"
   },
   "checkout": {
     "emptyTitle": "Tu carrito está vacío",
@@ -255,7 +257,8 @@
     "cardDetails": "Datos de la tarjeta",
     "stripeSecure": "Pago seguro gestionado por Stripe",
     "stripeNotLoaded": "El sistema de pago no está disponible. Recarga la página.",
-    "stripeError": "Error en el pago. Revisa los datos de tu tarjeta."
+    "stripeError": "Error en el pago. Revisa los datos de tu tarjeta.",
+    "addressSuggestionHint": "Sugerencia orientativa — verifica la dirección antes de confirmar"
   },
   "admin": {
     "title": "Panel de Administración",
@@ -275,7 +278,7 @@
     "statusPending": "Pendiente",
     "statusConfirmed": "Confirmada",
     "statusCancelled": "Cancelada",
-    "confirmSuccess": "Reserva confirmada - WhatsApp enviado al cliente",
+    "confirmSuccess": "Reserva confirmada",
     "confirmError": "Error al confirmar la reserva",
     "statusUpdated": "Estado actualizado",
     "statusError": "Error al actualizar el estado",
@@ -392,7 +395,7 @@
     "createReservation": "Crear Reserva",
     "reservationCreated": "Reserva creada correctamente",
     "reservationError": "Error al crear la reserva",
-    "confirmSuccess": "Reserva confirmada - WhatsApp enviado al cliente",
+    "confirmSuccess": "Reserva confirmada",
     "confirmError": "Error al confirmar la reserva",
     "cancelSuccess": "Reserva cancelada",
     "cancelError": "Error al cancelar",
@@ -483,5 +486,17 @@
     "contactReminder": "Te enviaremos una confirmación a {{email}}",
     "backHome": "Volver al inicio",
     "notFound": "Pedido no encontrado"
+  },
+  "dialog": {
+    "addExtras": "Añade un extra",
+    "addNote": "Añadir nota para el cocinero",
+    "editNote": "Editar nota",
+    "notePlaceholder": "Ej: sin cebolla, muy hecho, poco tomate...",
+    "addToCart": "Añadir al carrito",
+    "drinksSection": "No te quedes con sed!",
+    "dessertSection": "El toque dulce",
+    "tiramisuDesc": "Casero · artesanal",
+    "addExtrasCustom": "Elige tus ingredientes",
+    "freeCounter": "{{count}}/{{max}} incluidos · los siguientes tienen coste"
   }
 }

@@ -10,7 +10,7 @@ const CartFloatingButton = () => {
   return (
     <Button
       onClick={() => setIsOpen(true)}
-      className="fixed bottom-6 right-6 z-50 bg-menu-teal hover:bg-menu-teal/90 text-menu-teal-foreground shadow-xl rounded-full h-14 px-5 gap-2 font-display text-base animate-fade-in-up hidden md:flex"
+      className="fixed bottom-6 right-6 z-50 bg-menu-teal hover:bg-menu-teal/90 text-menu-teal-foreground shadow-xl rounded-full h-14 px-5 gap-2 font-display text-base animate-fade-in-up hidden md:flex lg:hidden"
     >
       <ShoppingCart className="w-5 h-5" />
       <span>{totalItems}</span>

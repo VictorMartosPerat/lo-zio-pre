@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,7 +20,22 @@ import {
   Plus,
   Trash2,
   Clock,
+  Phone,
+  User,
 } from "lucide-react";
+import AddressAutocomplete from "@/components/AddressAutocomplete";
+import { locationsData } from "@/lib/locations";
+import { getNearestStore } from "@/lib/nearestStore";
+import {
+  isStoreOpen,
+  getScheduleStatus,
+  getAvailableDays,
+  getTimeSlots,
+  formatDayLabel,
+  formatTime,
+  type ScheduleStatus,
+} from "@/lib/storeHours";
+import { AlertTriangle, CalendarClock, Zap } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { z } from "zod";
@@ -28,7 +43,7 @@ import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 
 const Checkout = () => {
   const { items, totalPrice, updateQuantity, removeItem, clearCart } = useCart();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const stripe = useStripe();
@@ -36,6 +51,68 @@ const Checkout = () => {
 
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [profileAddress, setProfileAddress] = useState<{
+    address: string;
+    city: string;
+    postalCode: string;
+  } | null>(null);
+
+  // "asap" = as soon as possible (only when open), "scheduled" = user picks time
+  const [scheduleMode, setScheduleMode] = useState<"asap" | "scheduled">(() =>
+    getScheduleStatus().type === "open" ? "asap" : "scheduled"
+  );
+  const [scheduledDay, setScheduledDay] = useState<Date>(() => {
+    const status = getScheduleStatus();
+    return status.type !== "open" ? status.opensAt : new Date();
+  });
+  const [scheduledTime, setScheduledTime] = useState<string>(() => {
+    const status = getScheduleStatus();
+    if (status.type !== "open") return formatTime(status.opensAt.getHours(), status.opensAt.getMinutes());
+    return "";
+  });
+
+  const isCurrentlyOpen = getScheduleStatus().type === "open";
+
+  // Derive the final scheduledFor Date
+  const scheduledFor: Date | null = (() => {
+    if (scheduleMode === "asap") return null;
+    if (!scheduledTime) return null;
+    const [h, m] = scheduledTime.split(":").map(Number);
+    const d = new Date(scheduledDay);
+    d.setHours(h, m, 0, 0);
+    return d;
+  })();
+
+  // Pre-fill contact info and address from user profile — wait for auth to finish loading
+  useEffect(() => {
+    if (authLoading || !user) return;
+    const loadProfile = async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name, phone, address, city, postal_code")
+        .eq("user_id", user.id)
+        .single();
+      setForm((prev) => ({
+        ...prev,
+        name: data?.full_name ?? prev.name,
+        phone: data?.phone ?? prev.phone,
+        email: user.email ?? prev.email,
+      }));
+      if (data?.address) {
+        setProfileAddress({
+          address: data.address ?? "",
+          city: data.city ?? "",
+          postalCode: data.postal_code ?? "",
+        });
+      }
+    };
+    loadProfile();
+  }, [user, authLoading]);
+
+  const pickupStores = [
+    { id: "tarragona", ...locationsData.tarragona },
+    { id: "arrabassada", ...locationsData.arrabassada },
+  ];
 
   const checkoutSchema = z
     .object({
@@ -43,12 +120,22 @@ const Checkout = () => {
       email: z.string().trim().email(t("checkout.emailInvalid")).max(255),
       phone: z.string().trim().min(9, t("checkout.phoneInvalid")).max(20),
       orderType: z.enum(["pickup", "delivery"]),
+      pickupStore: z.string().optional(),
       address: z.string().optional(),
       city: z.string().optional(),
       postalCode: z.string().optional(),
       paymentMethod: z.enum(["cash", "stripe"]),
       notes: z.string().max(500).optional(),
     })
+    .refine(
+      (data) => {
+        if (data.orderType === "pickup") {
+          return data.pickupStore && data.pickupStore.length > 0;
+        }
+        return true;
+      },
+      { message: "Debes seleccionar en qué local recoges el pedido", path: ["pickupStore"] },
+    )
     .refine(
       (data) => {
         if (data.orderType === "delivery") {
@@ -64,9 +151,13 @@ const Checkout = () => {
     email: "",
     phone: "",
     orderType: "pickup" as "pickup" | "delivery",
+    pickupStore: "",
     address: "",
     city: "",
     postalCode: "",
+    staircase: "",
+    floor: "",
+    door: "",
     paymentMethod: "cash" as "cash" | "stripe",
     notes: "",
   });
@@ -85,6 +176,11 @@ const Checkout = () => {
       return;
     }
 
+    if (scheduleMode === "scheduled" && !scheduledFor) {
+      toast.error("Selecciona una hora para programar tu pedido");
+      return;
+    }
+
     const result = checkoutSchema.safeParse(form);
     if (!result.success) {
       const fieldErrors: Record<string, string> = {};
@@ -97,6 +193,15 @@ const Checkout = () => {
 
     setLoading(true);
     try {
+      // Determine the fulfillment time (scheduled or now)
+      const fulfillAt = scheduledFor ?? new Date();
+
+      // For delivery orders, auto-assign the nearest OPEN store at fulfillment time
+      let assignedStore = form.orderType === "pickup" ? form.pickupStore : null;
+      if (form.orderType === "delivery") {
+        assignedStore = await getNearestStore(form.address, form.city, form.postalCode, fulfillAt);
+      }
+
       // 1. Create order in Supabase
       const { data: order, error: orderError } = await supabase
         .from("orders")
@@ -106,28 +211,48 @@ const Checkout = () => {
           guest_email: form.email,
           guest_phone: form.phone,
           order_type: form.orderType,
-          delivery_address: form.orderType === "delivery" ? form.address : null,
+          pickup_store: assignedStore,
+          delivery_address: form.orderType === "delivery"
+            ? [
+                form.address,
+                form.staircase ? `Esc. ${form.staircase}` : null,
+                form.floor ? `Piso ${form.floor}` : null,
+                form.door ? `Puerta ${form.door}` : null,
+              ].filter(Boolean).join(", ")
+            : null,
           delivery_city: form.orderType === "delivery" ? form.city : null,
           delivery_postal_code: form.orderType === "delivery" ? form.postalCode : null,
           payment_method: form.paymentMethod,
-          payment_status: form.paymentMethod === "stripe" ? "pending_payment" : "pending",
+          payment_status: "pending",
           notes: form.notes || null,
           total_amount: totalPrice,
+          scheduled_for: scheduledFor ? scheduledFor.toISOString() : null,
         })
         .select("id")
         .single();
 
       if (orderError) throw orderError;
 
-      // 2. Insert order items
-      const orderItems = items.map((item) => ({
-        order_id: order.id,
-        item_name: item.name,
-        item_description: item.description || null,
-        quantity: item.quantity,
-        unit_price: item.price,
-        total_price: item.price * item.quantity,
-      }));
+      // 2. Insert order items (including extras as part of description)
+      const orderItems = items.map((item) => {
+        const extrasList = (item.extras || [])
+          .map((e) => `${e.emoji} ${e.label} ×${e.quantity}`)
+          .join(", ");
+        const extrasPrice = (item.extras || []).reduce((s, e) => s + e.price * e.quantity, 0);
+        const descParts = [
+          item.description,
+          extrasList ? `Extras: ${extrasList}` : null,
+          item.note ? `📝 ${item.note}` : null,
+        ].filter(Boolean);
+        return {
+          order_id: order.id,
+          item_name: item.name,
+          item_description: descParts.join(" — ") || null,
+          quantity: item.quantity,
+          unit_price: item.price,
+          total_price: item.price * item.quantity + extrasPrice,
+        };
+      });
       const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
       if (itemsError) throw itemsError;
 
@@ -170,7 +295,7 @@ const Checkout = () => {
         if (stripeError) {
           await supabase
             .from("orders")
-            .update({ payment_status: "payment_failed" })
+            .update({ payment_status: "failed" })
             .eq("id", order.id);
           throw new Error(stripeError.message || t("checkout.stripeError"));
         }
@@ -178,7 +303,10 @@ const Checkout = () => {
         if (paymentIntent?.status === "succeeded") {
           await supabase
             .from("orders")
-            .update({ payment_status: "paid" })
+            .update({
+              payment_status: "paid",
+              stripe_payment_intent_id: paymentIntent.id,
+            })
             .eq("id", order.id);
         }
       }
@@ -231,6 +359,148 @@ const Checkout = () => {
             {t("checkout.title")}
           </h1>
 
+          {/* Schedule selector */}
+          {(() => {
+            const storeForSlots = form.orderType === "pickup" ? form.pickupStore || undefined : undefined;
+            const availableDays = getAvailableDays(storeForSlots);
+            const timeSlots = scheduleMode === "scheduled"
+              ? getTimeSlots(scheduledDay, storeForSlots)
+              : [];
+
+            // Auto-select first slot if day changes and current slot is no longer valid
+            const ensureValidTime = (day: Date) => {
+              const slots = getTimeSlots(day, storeForSlots);
+              if (slots.length > 0 && !slots.includes(scheduledTime)) {
+                setScheduledTime(slots[0]);
+              }
+            };
+
+            return (
+              <div className="mb-6 bg-card border border-border rounded-xl p-5">
+                <h2 className="font-display text-base font-bold text-foreground mb-4 flex items-center gap-2">
+                  <CalendarClock className="w-4 h-4 text-menu-teal" />
+                  ¿Cuándo quieres tu pedido?
+                </h2>
+
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  {/* ASAP option */}
+                  <button
+                    type="button"
+                    disabled={!isCurrentlyOpen}
+                    onClick={() => setScheduleMode("asap")}
+                    className={`flex items-center gap-2 p-3 rounded-lg border-2 text-left transition-all ${
+                      scheduleMode === "asap"
+                        ? "border-menu-teal bg-menu-teal/5"
+                        : isCurrentlyOpen
+                        ? "border-border hover:border-menu-teal/40"
+                        : "border-border opacity-40 cursor-not-allowed bg-muted/30"
+                    }`}
+                  >
+                    <Zap className="w-4 h-4 text-menu-teal shrink-0" />
+                    <div>
+                      <p className="font-display font-bold text-sm">Lo antes posible</p>
+                      <p className="text-xs text-muted-foreground">
+                        {isCurrentlyOpen ? "Estamos abiertos" : "Cerrado ahora"}
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* Scheduled option */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setScheduleMode("scheduled");
+                      if (!scheduledTime && timeSlots.length === 0) {
+                        const slots = getTimeSlots(availableDays[0], storeForSlots);
+                        setScheduledDay(availableDays[0]);
+                        setScheduledTime(slots[0] ?? "");
+                      } else if (!scheduledTime && timeSlots.length > 0) {
+                        setScheduledTime(timeSlots[0]);
+                      }
+                    }}
+                    className={`flex items-center gap-2 p-3 rounded-lg border-2 text-left transition-all ${
+                      scheduleMode === "scheduled"
+                        ? "border-menu-teal bg-menu-teal/5"
+                        : "border-border hover:border-menu-teal/40"
+                    }`}
+                  >
+                    <CalendarClock className="w-4 h-4 text-menu-teal shrink-0" />
+                    <div>
+                      <p className="font-display font-bold text-sm">Programar</p>
+                      <p className="text-xs text-muted-foreground">Elige día y hora</p>
+                    </div>
+                  </button>
+                </div>
+
+                {/* Day + time pickers */}
+                {scheduleMode === "scheduled" && (
+                  <div className="space-y-3">
+                    {/* Day selector */}
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Día</p>
+                      <div className="flex gap-2 flex-wrap">
+                        {availableDays.map((day, i) => {
+                          const isSelected =
+                            day.getFullYear() === scheduledDay.getFullYear() &&
+                            day.getMonth()    === scheduledDay.getMonth() &&
+                            day.getDate()     === scheduledDay.getDate();
+                          return (
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => {
+                                setScheduledDay(day);
+                                ensureValidTime(day);
+                              }}
+                              className={`px-3 py-1.5 rounded-lg text-sm font-semibold border transition-all ${
+                                isSelected
+                                  ? "bg-menu-teal text-menu-teal-foreground border-menu-teal"
+                                  : "border-border hover:border-menu-teal/40 text-foreground"
+                              }`}
+                            >
+                              {formatDayLabel(day)}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Time selector */}
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Hora</p>
+                      {timeSlots.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">No hay horarios disponibles para este día.</p>
+                      ) : (
+                        <div className="flex gap-2 flex-wrap">
+                          {timeSlots.map((slot) => (
+                            <button
+                              key={slot}
+                              type="button"
+                              onClick={() => setScheduledTime(slot)}
+                              className={`px-3 py-1.5 rounded-lg text-sm font-semibold border transition-all ${
+                                scheduledTime === slot
+                                  ? "bg-menu-teal text-menu-teal-foreground border-menu-teal"
+                                  : "border-border hover:border-menu-teal/40 text-foreground"
+                              }`}
+                            >
+                              {slot}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {scheduledFor && (
+                      <p className="text-xs text-menu-teal font-semibold mt-1">
+                        ✓ Pedido programado para el {formatDayLabel(scheduledDay)} a las {scheduledTime}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
           <div className="grid lg:grid-cols-5 gap-8">
             <form onSubmit={handleSubmit} className="lg:col-span-3 space-y-8">
               {/* Contact */}
@@ -238,6 +508,7 @@ const Checkout = () => {
                 <h2 className="font-display text-xl font-bold text-foreground mb-4">
                   {t("checkout.contactInfo")}
                 </h2>
+
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="name">{t("checkout.name")} *</Label>
@@ -287,7 +558,10 @@ const Checkout = () => {
                 </h2>
                 <RadioGroup
                   value={form.orderType}
-                  onValueChange={(v) => updateField("orderType", v)}
+                  onValueChange={(v) => {
+                    updateField("orderType", v);
+                    updateField("pickupStore", "");
+                  }}
                   className="grid sm:grid-cols-2 gap-3"
                 >
                   <label
@@ -332,37 +606,159 @@ const Checkout = () => {
                   </span>
                 </div>
 
+                {form.orderType === "pickup" && (
+                  <div className="mt-4 space-y-3">
+                    <p className="text-sm font-display font-semibold text-foreground">
+                      ¿En qué local recoges? *
+                    </p>
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      {pickupStores.map((store) => {
+                        const fulfillAt = scheduledFor ?? new Date();
+                        const closed = !isStoreOpen(store.id, fulfillAt);
+                        return (
+                        <button
+                          key={store.id}
+                          type="button"
+                          disabled={closed}
+                          onClick={() => !closed && updateField("pickupStore", store.id)}
+                          className={`text-left p-4 rounded-lg border-2 transition-all relative ${
+                            closed
+                              ? "border-border opacity-50 cursor-not-allowed bg-muted/30"
+                              : form.pickupStore === store.id
+                              ? "border-menu-teal bg-menu-teal/5"
+                              : "border-border hover:border-menu-teal/30"
+                          }`}
+                        >
+                          {closed && (
+                            <span className="absolute top-2 right-2 text-[10px] bg-red-100 text-red-700 border border-red-200 rounded-full px-2 py-0.5 font-semibold">
+                              Cerrado hoy
+                            </span>
+                          )}
+                          <p className="font-display font-bold text-sm text-foreground mb-1">
+                            {store.name}
+                          </p>
+                          <div className="flex items-start gap-1.5 text-xs text-muted-foreground mb-1">
+                            <MapPin className="w-3 h-3 mt-0.5 shrink-0" />
+                            <span>{store.address}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
+                            <Clock className="w-3 h-3 shrink-0" />
+                            <span>{store.hours}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <Phone className="w-3 h-3 shrink-0" />
+                            <span>{store.phone}</span>
+                          </div>
+                        </button>
+                        );
+                      })}
+                    </div>
+                    {errors.pickupStore && (
+                      <p className="text-destructive text-xs">{errors.pickupStore}</p>
+                    )}
+                  </div>
+                )}
+
                 {form.orderType === "delivery" && (
-                  <div className="mt-4 grid sm:grid-cols-2 gap-4">
-                    <div className="sm:col-span-2">
-                      <Label htmlFor="address">{t("checkout.address")} *</Label>
-                      <Input
-                        id="address"
-                        value={form.address}
-                        onChange={(e) => updateField("address", e.target.value)}
-                        placeholder={t("checkout.addressPlaceholder")}
-                      />
-                      {errors.address && (
-                        <p className="text-destructive text-xs mt-1">{errors.address}</p>
-                      )}
-                    </div>
-                    <div>
-                      <Label htmlFor="city">{t("checkout.city")}</Label>
-                      <Input
-                        id="city"
-                        value={form.city}
-                        onChange={(e) => updateField("city", e.target.value)}
-                        placeholder={t("checkout.cityPlaceholder")}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="postalCode">{t("checkout.postalCode")}</Label>
-                      <Input
-                        id="postalCode"
-                        value={form.postalCode}
-                        onChange={(e) => updateField("postalCode", e.target.value)}
-                        placeholder={t("checkout.postalCodePlaceholder")}
-                      />
+                  <div className="mt-4 space-y-4">
+                    {/* Copy address from profile */}
+                    {user && profileAddress && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setForm((prev) => ({
+                            ...prev,
+                            address: profileAddress.address,
+                            city: profileAddress.city,
+                            postalCode: profileAddress.postalCode,
+                          }));
+                          setErrors((prev) => ({ ...prev, address: "" }));
+                        }}
+                        className="w-full flex items-center gap-2.5 px-4 py-3 rounded-lg border-2 border-dashed border-menu-teal/50 bg-menu-teal/5 hover:bg-menu-teal/10 hover:border-menu-teal transition-all text-left"
+                      >
+                        <User className="w-4 h-4 text-menu-teal shrink-0" />
+                        <div className="min-w-0">
+                          <p className="font-display font-bold text-sm text-menu-teal">
+                            Enviarme a mi dirección
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {[profileAddress.address, profileAddress.postalCode, profileAddress.city]
+                              .filter(Boolean)
+                              .join(", ")}
+                          </p>
+                        </div>
+                      </button>
+                    )}
+
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div className="sm:col-span-2">
+                        <Label htmlFor="address">{t("checkout.address")} *</Label>
+                        <AddressAutocomplete
+                          value={form.address}
+                          onChange={(v) => updateField("address", v)}
+                          onSelect={({ address, city, postalCode }) => {
+                            setForm((prev) => ({
+                              ...prev,
+                              address,
+                              city: city || prev.city,
+                              postalCode: postalCode || prev.postalCode,
+                            }));
+                            setErrors((prev) => ({ ...prev, address: "" }));
+                          }}
+                          placeholder={t("checkout.addressPlaceholder")}
+                          error={errors.address}
+                        />
+                      </div>
+
+                      {/* Escalera / Piso / Puerta */}
+                      <div className="sm:col-span-2 grid grid-cols-3 gap-3">
+                        <div>
+                          <Label htmlFor="staircase">Escalera</Label>
+                          <Input
+                            id="staircase"
+                            value={form.staircase}
+                            onChange={(e) => updateField("staircase", e.target.value)}
+                            placeholder="A, B…"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="floor">Piso</Label>
+                          <Input
+                            id="floor"
+                            value={form.floor}
+                            onChange={(e) => updateField("floor", e.target.value)}
+                            placeholder="1º, 2º…"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="door">Puerta</Label>
+                          <Input
+                            id="door"
+                            value={form.door}
+                            onChange={(e) => updateField("door", e.target.value)}
+                            placeholder="1, 2ª…"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="city">{t("checkout.city")}</Label>
+                        <Input
+                          id="city"
+                          value={form.city}
+                          onChange={(e) => updateField("city", e.target.value)}
+                          placeholder={t("checkout.cityPlaceholder")}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="postalCode">{t("checkout.postalCode")}</Label>
+                        <Input
+                          id="postalCode"
+                          value={form.postalCode}
+                          onChange={(e) => updateField("postalCode", e.target.value)}
+                          placeholder={t("checkout.postalCodePlaceholder")}
+                        />
+                      </div>
                     </div>
                   </div>
                 )}
@@ -475,59 +871,108 @@ const Checkout = () => {
 
             {/* Order summary sidebar */}
             <div className="lg:col-span-2">
-              <div className="bg-card rounded-xl p-6 border border-border sticky top-28">
-                <h2 className="font-display text-xl font-bold text-foreground mb-4">
-                  {t("checkout.yourOrder")}
-                </h2>
-                <div className="space-y-3 mb-6">
-                  {items.map((item) => (
-                    <div key={item.id} className="flex items-start gap-3">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-display font-bold text-sm text-foreground truncate">
-                          {item.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {item.price.toFixed(2)} € {t("checkout.perUnit")}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                        >
-                          <Minus className="w-3 h-3" />
-                        </Button>
-                        <span className="w-5 text-center text-xs font-semibold">
-                          {item.quantity}
-                        </span>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        >
-                          <Plus className="w-3 h-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 text-destructive"
-                          onClick={() => removeItem(item.id)}
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </div>
-                      <span className="text-sm font-bold text-foreground w-16 text-right">
-                        {(item.price * item.quantity).toFixed(2)} €
-                      </span>
-                    </div>
-                  ))}
+              <div className="bg-card rounded-xl border border-border sticky top-28 overflow-hidden">
+                <div className="px-5 py-4 border-b border-border">
+                  <h2 className="font-display text-lg font-bold text-foreground">
+                    {t("checkout.yourOrder")}
+                  </h2>
                 </div>
-                <div className="border-t border-border pt-4">
+
+                <div className="divide-y divide-border">
+                  {items.map((item) => {
+                    const extrasPrice = (item.extras || []).reduce(
+                      (s, e) => s + e.price * e.quantity,
+                      0,
+                    );
+                    const lineTotal = item.price * item.quantity + extrasPrice;
+                    return (
+                      <div key={item.id} className="px-5 py-4">
+                        {/* Name row */}
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <div className="flex items-center gap-2 min-w-0">
+                            {/* qty badge */}
+                            <span className="shrink-0 w-5 h-5 rounded-full bg-menu-teal text-menu-teal-foreground text-[10px] font-bold flex items-center justify-center">
+                              {item.quantity}
+                            </span>
+                            <p className="font-display font-bold text-sm text-foreground leading-tight">
+                              {item.name}
+                            </p>
+                          </div>
+                          <span className="font-display font-bold text-sm text-foreground shrink-0">
+                            {lineTotal.toFixed(2)} €
+                          </span>
+                        </div>
+
+                        {/* Base price */}
+                        <p className="text-[11px] text-muted-foreground ml-7 mb-1.5">
+                          {item.price.toFixed(2)} € / ud
+                        </p>
+
+                        {/* Extras */}
+                        {(item.extras || []).length > 0 && (
+                          <ul className="ml-7 space-y-0.5 mb-1.5">
+                            {(item.extras || []).map((extra) => (
+                              <li
+                                key={extra.id}
+                                className="flex items-center justify-between text-[11px] text-muted-foreground"
+                              >
+                                <span className="flex items-center gap-1">
+                                  <span>{extra.emoji}</span>
+                                  {extra.quantity > 1 && (
+                                    <span className="font-bold">{extra.quantity}×</span>
+                                  )}
+                                  {extra.label}
+                                </span>
+                                <span className="font-semibold text-foreground">
+                                  {extra.price === 0
+                                    ? "Gratis"
+                                    : `+${(extra.price * extra.quantity).toFixed(2)} €`}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+
+                        {/* Note */}
+                        {item.note && (
+                          <p className="ml-7 text-[11px] text-muted-foreground italic">
+                            📝 {item.note}
+                          </p>
+                        )}
+
+                        {/* qty controls + remove */}
+                        <div className="flex items-center gap-1.5 mt-2 ml-7">
+                          <button
+                            type="button"
+                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            className="w-6 h-6 rounded-full border border-border flex items-center justify-center hover:bg-muted transition-colors"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </button>
+                          <span className="w-5 text-center text-xs font-bold">{item.quantity}</span>
+                          <button
+                            type="button"
+                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            className="w-6 h-6 rounded-full border border-border flex items-center justify-center hover:bg-muted transition-colors"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => removeItem(item.id)}
+                            className="w-6 h-6 rounded-full flex items-center justify-center text-destructive/50 hover:text-destructive hover:bg-destructive/5 transition-colors ml-0.5"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="px-5 py-4 border-t border-border bg-muted/30">
                   <div className="flex justify-between items-center">
-                    <span className="font-display text-lg font-bold">{t("cart.total")}</span>
+                    <span className="font-display font-bold text-base">{t("cart.total")}</span>
                     <span className="font-display text-2xl font-bold text-menu-teal">
                       {totalPrice.toFixed(2)} €
                     </span>

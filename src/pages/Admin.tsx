@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { toast } from "sonner";
-import { CalendarIcon, ChevronDown, ChevronUp, Pencil, Settings, BarChart3, Star, Users, Image as ImageIcon, Package } from "lucide-react";
+import { CalendarIcon, ChevronDown, ChevronUp, Pencil, Settings, BarChart3, Star, Users, Image as ImageIcon, Package, MapPin, ArrowRight } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -31,6 +31,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { locationsData } from "@/lib/locations";
 import { getUnavailableSlots } from "@/lib/availability";
 
 const TIME_SLOTS = ["19:00", "19:30", "20:00", "20:30", "21:00", "21:30", "22:00"];
@@ -67,6 +68,7 @@ const Admin = () => {
   const [cancelIds, setCancelIds] = useState<string[] | null>(null);
   const [cancelName, setCancelName] = useState("");
   const [activeTab, setActiveTab] = useState("reservations");
+  const [reservationSubTab, setReservationSubTab] = useState("lista");
 
   // Edit reservation state
   const [editReservation, setEditReservation] = useState<GroupedReservation | null>(null);
@@ -407,8 +409,8 @@ const Admin = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <TabsList className="font-body">
-              <TabsTrigger value="reservations" className="font-bold">{t("admin.reservations")}</TabsTrigger>
-              <TabsTrigger value="floorplan" className="font-bold">{t("admin.floorPlan")}</TabsTrigger>
+              <TabsTrigger value="reservations" className="font-bold">Reservas</TabsTrigger>
+              <TabsTrigger value="orders" className="font-bold">Pedidos</TabsTrigger>
             </TabsList>
 
             <DropdownMenu>
@@ -444,10 +446,10 @@ const Admin = () => {
             </DropdownMenu>
           </div>
 
-          {activeTab !== "reservations" && activeTab !== "floorplan" && (
+          {activeTab !== "reservations" && activeTab !== "orders" && (
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="sm" onClick={() => setActiveTab("reservations")} className="font-body text-xs">
-                ← Volver a reservas
+                ← Volver
               </Button>
               <Badge variant="secondary" className="font-body capitalize">
                 {activeTab === "products" ? "Productos" : activeTab === "media" ? "Media" : activeTab === "customers" ? "Clientes" : activeTab === "reports" ? "Reportes" : activeTab === "reviews" ? "Reseñas" : activeTab}
@@ -456,56 +458,82 @@ const Admin = () => {
           )}
 
           <TabsContent value="reservations" className="space-y-6">
-            {/* Push notifications toggle (admin device) */}
-            <PushNotificationToggle />
+            <Tabs value={reservationSubTab} onValueChange={setReservationSubTab}>
+              <TabsList className="font-body">
+                <TabsTrigger value="lista" className="font-bold">Lista</TabsTrigger>
+                <TabsTrigger value="plano" className="font-bold">Plano</TabsTrigger>
+              </TabsList>
 
-            {/* Toggle reservas */}
-            <div className="flex items-center justify-between bg-card rounded-lg p-4 border border-border shadow-sm">
-              <div>
-                <p className="font-body font-bold text-foreground text-sm">
-                  {reservationsEnabled ? "Reservas activas" : "Reservas desactivadas"}
-                </p>
-                <p className="text-muted-foreground font-body text-xs mt-0.5">
-                  {reservationsEnabled ? "Los usuarios pueden hacer reservas online" : "Las reservas online están pausadas"}
-                </p>
-              </div>
-              <Switch
-                checked={reservationsEnabled}
-                onCheckedChange={handleToggleReservations}
-              />
-            </div>
+              <TabsContent value="lista" className="space-y-6 mt-4">
+                {/* Push notifications toggle (admin device) */}
+                <PushNotificationToggle />
 
-            {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { label: t("admin.total"), count: totalActive },
-                { label: t("admin.pending"), count: filteredForDate.filter((r) => r.status === "pending").length },
-                { label: t("admin.confirmed"), count: filteredForDate.filter((r) => r.status === "confirmed").length },
-                { label: t("admin.cancelled"), count: filteredForDate.filter((r) => r.status === "cancelled").length },
-              ].map((s) => (
-                <div key={s.label} className="bg-card rounded-lg p-5 border border-border shadow-sm">
-                  <p className="text-muted-foreground font-body text-sm">{s.label}</p>
-                  <p className="font-display text-3xl font-bold text-foreground">{s.count}</p>
+                {/* Toggle reservas */}
+                <div className="flex items-center justify-between bg-card rounded-lg p-4 border border-border shadow-sm">
+                  <div>
+                    <p className="font-body font-bold text-foreground text-sm">
+                      {reservationsEnabled ? "Reservas activas" : "Reservas desactivadas"}
+                    </p>
+                    <p className="text-muted-foreground font-body text-xs mt-0.5">
+                      {reservationsEnabled ? "Los usuarios pueden hacer reservas online" : "Las reservas online están pausadas"}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={reservationsEnabled}
+                    onCheckedChange={handleToggleReservations}
+                  />
                 </div>
-              ))}
-            </div>
 
-            {/* Calendar + Filters */}
-            <div className="flex flex-col lg:flex-row gap-6">
-              {/* Calendar */}
-              <div className="lg:w-auto shrink-0">
-                {isMobile ? (
-                  <Collapsible open={calendarOpen} onOpenChange={setCalendarOpen}>
-                    <CollapsibleTrigger asChild>
-                      <Button variant="outline" className="w-full justify-between font-body text-sm">
-                        <span className="flex items-center gap-2">
-                          <CalendarIcon className="h-4 w-4" />
-                          {format(selectedDate, "EEE d MMM", { locale: es })}
-                        </span>
-                        {calendarOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                      </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="mt-2">
+                {/* Stats */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[
+                    { label: t("admin.total"), count: totalActive },
+                    { label: t("admin.pending"), count: filteredForDate.filter((r) => r.status === "pending").length },
+                    { label: t("admin.confirmed"), count: filteredForDate.filter((r) => r.status === "confirmed").length },
+                    { label: t("admin.cancelled"), count: filteredForDate.filter((r) => r.status === "cancelled").length },
+                  ].map((s) => (
+                    <div key={s.label} className="bg-card rounded-lg p-5 border border-border shadow-sm">
+                      <p className="text-muted-foreground font-body text-sm">{s.label}</p>
+                      <p className="font-display text-3xl font-bold text-foreground">{s.count}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Calendar + Filters */}
+                <div className="flex flex-col lg:flex-row gap-6">
+                  {/* Calendar */}
+                  <div className="lg:w-auto shrink-0">
+                    {isMobile ? (
+                      <Collapsible open={calendarOpen} onOpenChange={setCalendarOpen}>
+                        <CollapsibleTrigger asChild>
+                          <Button variant="outline" className="w-full justify-between font-body text-sm">
+                            <span className="flex items-center gap-2">
+                              <CalendarIcon className="h-4 w-4" />
+                              {format(selectedDate, "EEE d MMM", { locale: es })}
+                            </span>
+                            {calendarOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                          </Button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="mt-2">
+                          <div className="bg-card border border-border rounded-lg p-2">
+                            <Calendar
+                              mode="single"
+                              selected={selectedDate}
+                              onSelect={handleDateSelect}
+                              locale={es}
+                              className={cn("p-3 pointer-events-auto")}
+                              modifiers={{ hasReservation: (d) => reservationDates.has(format(d, "yyyy-MM-dd")) }}
+                              modifiersClassNames={{ hasReservation: "reservation-dot", today: "!bg-primary !text-primary-foreground" }}
+                            />
+                            <div className="px-3 pb-2">
+                              <Button size="sm" variant="outline" onClick={handleGoToToday} className="w-full font-body font-bold text-xs">
+                                Hoy
+                              </Button>
+                            </div>
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    ) : (
                       <div className="bg-card border border-border rounded-lg p-2">
                         <Calendar
                           mode="single"
@@ -522,75 +550,91 @@ const Admin = () => {
                           </Button>
                         </div>
                       </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                ) : (
-                  <div className="bg-card border border-border rounded-lg p-2">
-                    <Calendar
-                      mode="single"
-                      selected={selectedDate}
-                      onSelect={handleDateSelect}
-                      locale={es}
-                      className={cn("p-3 pointer-events-auto")}
-                      modifiers={{ hasReservation: (d) => reservationDates.has(format(d, "yyyy-MM-dd")) }}
-                      modifiersClassNames={{ hasReservation: "reservation-dot", today: "!bg-primary !text-primary-foreground" }}
-                    />
-                    <div className="px-3 pb-2">
-                      <Button size="sm" variant="outline" onClick={handleGoToToday} className="w-full font-body font-bold text-xs">
-                        Hoy
-                      </Button>
+                    )}
+                  </div>
+
+                  {/* Reservation list */}
+                  <div className="flex-1 space-y-6 min-w-0">
+                    {/* Filters */}
+                    <div className="flex flex-wrap gap-3">
+                      <select value={filterLocation} onChange={(e) => setFilterLocation(e.target.value)}
+                        className="px-4 py-2 rounded-sm bg-background border border-input font-body text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                        <option value="all">{t("admin.allLocations")}</option>
+                        <option value="tarragona">Lo Zio Tarragona</option>
+                        <option value="arrabassada">Lo Zio Arrabassada</option>
+                      </select>
+                      <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
+                        className="px-4 py-2 rounded-sm bg-background border border-input font-body text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                        <option value="all">{t("admin.allStatuses")}</option>
+                        <option value="pending">{t("admin.pending")}</option>
+                        <option value="confirmed">{t("admin.confirmed")}</option>
+                        <option value="cancelled">{t("admin.cancelled")}</option>
+                      </select>
+                      {format(selectedDate, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd") && cancelledTodayCount > 0 && filterStatus === "all" && (
+                        <Button
+                          size="sm"
+                          variant={showCancelledToday ? "secondary" : "outline"}
+                          onClick={() => setShowCancelledToday(!showCancelledToday)}
+                          className="font-body text-xs"
+                        >
+                          {showCancelledToday ? "Ocultar canceladas" : `Mostrar canceladas (${cancelledTodayCount})`}
+                        </Button>
+                      )}
+                      {format(selectedDate, "yyyy-MM-dd") !== format(new Date(), "yyyy-MM-dd") && (
+                        <Button size="sm" variant="ghost" onClick={handleGoToToday} className="font-body text-xs text-primary">
+                          ✕ Volver a hoy
+                        </Button>
+                      )}
                     </div>
-                  </div>
-                )}
-              </div>
 
-              {/* Reservation list */}
-              <div className="flex-1 space-y-6 min-w-0">
-                {/* Filters */}
-                <div className="flex flex-wrap gap-3">
-                  <select value={filterLocation} onChange={(e) => setFilterLocation(e.target.value)}
-                    className="px-4 py-2 rounded-sm bg-background border border-input font-body text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary">
-                    <option value="all">{t("admin.allLocations")}</option>
-                    <option value="tarragona">Lo Zio Tarragona</option>
-                    <option value="arrabassada">Lo Zio Arrabassada</option>
-                  </select>
-                  <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
-                    className="px-4 py-2 rounded-sm bg-background border border-input font-body text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary">
-                    <option value="all">{t("admin.allStatuses")}</option>
-                    <option value="pending">{t("admin.pending")}</option>
-                    <option value="confirmed">{t("admin.confirmed")}</option>
-                    <option value="cancelled">{t("admin.cancelled")}</option>
-                  </select>
-                  {format(selectedDate, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd") && cancelledTodayCount > 0 && filterStatus === "all" && (
-                    <Button
-                      size="sm"
-                      variant={showCancelledToday ? "secondary" : "outline"}
-                      onClick={() => setShowCancelledToday(!showCancelledToday)}
-                      className="font-body text-xs"
-                    >
-                      {showCancelledToday ? "Ocultar canceladas" : `Mostrar canceladas (${cancelledTodayCount})`}
-                    </Button>
-                  )}
-                  {format(selectedDate, "yyyy-MM-dd") !== format(new Date(), "yyyy-MM-dd") && (
-                    <Button size="sm" variant="ghost" onClick={handleGoToToday} className="font-body text-xs text-primary">
-                      ✕ Volver a hoy
-                    </Button>
-                  )}
+                    {/* Reservations for selected date */}
+                    {filteredForDate.length > 0 ? (
+                      renderDateGroup(format(selectedDate, "yyyy-MM-dd"), filteredForDate, format(selectedDate, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd"))
+                    ) : (
+                      <div className="bg-card rounded-lg p-12 border border-border text-center">
+                        <p className="text-muted-foreground font-body text-lg">{t("admin.noReservations")}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
+              </TabsContent>
 
-                {/* Reservations for selected date */}
-                {filteredForDate.length > 0 ? (
-                  renderDateGroup(format(selectedDate, "yyyy-MM-dd"), filteredForDate, format(selectedDate, "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd"))
-                ) : (
-                  <div className="bg-card rounded-lg p-12 border border-border text-center">
-                    <p className="text-muted-foreground font-body text-lg">{t("admin.noReservations")}</p>
+              <TabsContent value="plano" className="mt-4">
+                <FloorPlan />
+              </TabsContent>
+            </Tabs>
+          </TabsContent>
+
+          <TabsContent value="orders" className="space-y-4">
+            <div>
+              <h2 className="font-display text-2xl text-foreground">Pedidos por local</h2>
+              <p className="font-body text-sm text-muted-foreground mt-1">Gestiona los pedidos de cada restaurante.</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {[
+                { slug: "tarragona", name: "Lo Zio Tarragona", address: "Tarragona" },
+                { slug: "arrabassada", name: "Lo Zio Arrabassada", address: "Playa Arrabassada" },
+              ].map((loc) => (
+                <button
+                  key={loc.slug}
+                  onClick={() => navigate(`/admin/pedidos/${loc.slug}`)}
+                  className="bg-card border border-border rounded-xl p-6 text-left hover:bg-muted/40 transition-colors group"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-4 h-4 text-primary shrink-0" />
+                        <h3 className="font-display text-lg text-foreground">{loc.name}</h3>
+                      </div>
+                      <p className="font-body text-sm text-muted-foreground pl-6">{loc.address}</p>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors mt-1" />
                   </div>
-                )}
-              </div>
+                </button>
+              ))}
             </div>
           </TabsContent>
 
-          <TabsContent value="floorplan"><FloorPlan /></TabsContent>
           <TabsContent value="reports"><AdminReports /></TabsContent>
           <TabsContent value="reviews"><AdminReviews /></TabsContent>
           <TabsContent value="customers"><AdminCustomers /></TabsContent>

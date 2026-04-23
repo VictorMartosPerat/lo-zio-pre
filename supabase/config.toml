@@ -1,1 +1,10 @@
-project_id = "pnxahwwsxibexyglopvr"
+project_id = "lnrnyahzkqqnvlpzrdlv"
+
+[functions.confirm-reservation]
+verify_jwt = false
+
+[functions.refund-order]
+verify_jwt = false
+
+[functions.notify-order-status]
+verify_jwt = false

@@ -189,7 +189,9 @@
     "title": "La Teva Comanda",
     "empty": "El teu carret està buit",
     "total": "Total",
-    "checkout": "Fer Comanda"
+    "checkout": "Fer Comanda",
+    "addMorePizza": "Et falta alguna pizza?",
+    "upsellTitle": "Vols afegir alguna cosa més?"
   },
   "checkout": {
     "emptyTitle": "El teu carret està buit",
@@ -236,7 +238,8 @@
     "cardDetails": "Dades de la targeta",
     "stripeSecure": "Pagament segur gestionat per Stripe",
     "stripeNotLoaded": "El sistema de pagament no està disponible. Recarrega la pàgina.",
-    "stripeError": "Error en el pagament. Revisa les dades de la teva targeta."
+    "stripeError": "Error en el pagament. Revisa les dades de la teva targeta.",
+    "addressSuggestionHint": "Suggeriment orientatiu — verifica l'adreça abans de confirmar"
   },
   "admin": {
     "title": "Panell d'Administració",
@@ -256,7 +259,7 @@
     "statusPending": "Pendent",
     "statusConfirmed": "Confirmada",
     "statusCancelled": "Cancel·lada",
-    "confirmSuccess": "Reserva confirmada - WhatsApp enviat al client",
+    "confirmSuccess": "Reserva confirmada",
     "confirmError": "Error en confirmar la reserva",
     "statusUpdated": "Estat actualitzat",
     "statusError": "Error en actualitzar l'estat",
@@ -373,7 +376,7 @@
     "createReservation": "Crear Reserva",
     "reservationCreated": "Reserva creada correctament",
     "reservationError": "Error en crear la reserva",
-    "confirmSuccess": "Reserva confirmada - WhatsApp enviat al client",
+    "confirmSuccess": "Reserva confirmada",
     "confirmError": "Error en confirmar la reserva",
     "cancelSuccess": "Reserva cancel·lada",
     "cancelError": "Error en cancel·lar",
@@ -464,5 +467,17 @@
     "contactReminder": "Et enviarem una confirmació a {{email}}",
     "backHome": "Tornar a l'inici",
     "notFound": "Comanda no trobada"
+  },
+  "dialog": {
+    "addExtras": "Afegeix un extra",
+    "addNote": "Afegeix una nota per al cuiner",
+    "editNote": "Editar nota",
+    "notePlaceholder": "Ex: sense ceba, molt fet, poc tomàquet...",
+    "addToCart": "Afegir al cistell",
+    "drinksSection": "No et quedis assedegat!",
+    "dessertSection": "El toc dolç",
+    "tiramisuDesc": "Casolà · artesanal",
+    "addExtrasCustom": "Tria els teus ingredients",
+    "freeCounter": "{{count}}/{{max}} inclosos · els següents tenen cost"
   }
 }

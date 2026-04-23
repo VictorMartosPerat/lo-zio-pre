@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -27,6 +28,8 @@ import ResetPassword from "./pages/ResetPassword.tsx";
 import MyReservations from "./pages/MyReservations.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import ReviewPage from "./pages/ReviewPage.tsx";
+import AdminOrders from "./pages/AdminOrders.tsx";
+import MyOrders from "./pages/MyOrders.tsx";
 
 const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = stripeKey ? loadStripe(stripeKey) : null;
@@ -38,6 +41,14 @@ const AdminNotificationListener = () => {
   return null;
 };
 
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+};
+
 const App = () => (
   <HelmetProvider>
   <QueryClientProvider client={queryClient}>
@@ -45,9 +56,10 @@ const App = () => (
       <CartProvider>
         <TooltipProvider>
           <Toaster />
-          <Sonner />
+          <Sonner position="top-center" />
           <AdminNotificationListener />
           <BrowserRouter>
+            <ScrollToTop />
             <InstallBanner />
             <UpdateBanner />
             <CartDrawer />
@@ -61,11 +73,13 @@ const App = () => (
               <Route path="/mis-reservas" element={<MyReservations />} />
               <Route path="/perfil" element={<Profile />} />
               <Route path="/admin" element={<Admin />} />
-              <Route path="/pedido" element={stripePromise ? <Elements stripe={stripePromise}><Checkout /></Elements> : <Checkout />} />
+              <Route path="/pedido" element={<Elements stripe={stripePromise}><Checkout /></Elements>} />
               <Route path="/pedido-confirmado" element={<OrderConfirmation />} />
               <Route path="/locales" element={<Locales />} />
               <Route path="/locales/:slug" element={<LocationDetail />} />
               <Route path="/resenas" element={<ReviewPage />} />
+              <Route path="/admin/pedidos/:store" element={<AdminOrders />} />
+              <Route path="/mis-pedidos" element={<MyOrders />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

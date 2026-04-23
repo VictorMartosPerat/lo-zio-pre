@@ -189,7 +189,9 @@
     "title": "Your Order",
     "empty": "Your cart is empty",
     "total": "Total",
-    "checkout": "Place Order"
+    "checkout": "Place Order",
+    "addMorePizza": "Want to add another pizza?",
+    "upsellTitle": "Want to add something else?"
   },
   "checkout": {
     "emptyTitle": "Your cart is empty",
@@ -236,7 +238,8 @@
     "cardDetails": "Card details",
     "stripeSecure": "Secure payment managed by Stripe",
     "stripeNotLoaded": "Payment system unavailable. Please reload the page.",
-    "stripeError": "Payment error. Please check your card details."
+    "stripeError": "Payment error. Please check your card details.",
+    "addressSuggestionHint": "Suggested address — please verify before confirming"
   },
   "admin": {
     "title": "Admin Panel",
@@ -256,7 +259,7 @@
     "statusPending": "Pending",
     "statusConfirmed": "Confirmed",
     "statusCancelled": "Cancelled",
-    "confirmSuccess": "Reservation confirmed - WhatsApp sent to customer",
+    "confirmSuccess": "Reservation confirmed",
     "confirmError": "Error confirming reservation",
     "statusUpdated": "Status updated",
     "statusError": "Error updating status",
@@ -373,7 +376,7 @@
     "createReservation": "Create Reservation",
     "reservationCreated": "Reservation created successfully",
     "reservationError": "Error creating reservation",
-    "confirmSuccess": "Reservation confirmed - WhatsApp sent to customer",
+    "confirmSuccess": "Reservation confirmed",
     "confirmError": "Error confirming reservation",
     "cancelSuccess": "Reservation cancelled",
     "cancelError": "Error cancelling",
@@ -464,5 +467,17 @@
     "contactReminder": "We will send a confirmation to {{email}}",
     "backHome": "Back to home",
     "notFound": "Order not found"
+  },
+  "dialog": {
+    "addExtras": "Add an extra",
+    "addNote": "Add a note for the kitchen",
+    "editNote": "Edit note",
+    "notePlaceholder": "E.g: no onion, well done, less tomato...",
+    "addToCart": "Add to cart",
+    "drinksSection": "Don't leave thirsty!",
+    "dessertSection": "Something sweet?",
+    "tiramisuDesc": "Homemade · artisan",
+    "addExtrasCustom": "Choose your ingredients",
+    "freeCounter": "{{count}}/{{max}} included · extra ones are charged"
   }
 }

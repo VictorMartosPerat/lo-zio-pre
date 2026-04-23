@@ -11,6 +11,7 @@ import {
   CalendarCheck,
   MapPin,
   Globe,
+  ShoppingBag,
 } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -108,6 +109,10 @@ const MobileBottomNav = () => {
               <DropdownMenuItem onClick={() => navigate("/mis-reservas")}>
                 <CalendarCheck className="mr-2 h-4 w-4" />
                 {t("nav.myReservations", "Mis reservas")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/mis-pedidos")}>
+                <ShoppingBag className="mr-2 h-4 w-4" />
+                Mis pedidos
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleSignOut} className="text-destructive">

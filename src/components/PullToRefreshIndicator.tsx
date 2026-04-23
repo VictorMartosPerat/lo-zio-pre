@@ -14,7 +14,7 @@ const PullToRefreshIndicator = ({
   const rotate = `rotate(${pullDistance * 2.5}deg)`;
 
   return (
-    <div className="absolute inset-x-0 top-0 flex flex-col items-center justify-center bg-background"
+    <div className="absolute inset-x-0 top-0 flex flex-col items-center justify-center bg-background z-[60]"
       style={{ height: refreshing ? 72 : pullDistance }}
     >
       <div

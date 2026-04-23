@@ -84,46 +84,6 @@ serve(async (req) => {
       throw new Error("Error creating reservation");
     }
 
-    // Notify owner via WhatsApp (non-blocking)
-    try {
-      const WHATSAPP_TOKEN = Deno.env.get("WHATSAPP_TOKEN");
-      const WHATSAPP_PHONE_ID = Deno.env.get("WHATSAPP_PHONE_ID");
-      const OWNER_WHATSAPP = Deno.env.get("OWNER_WHATSAPP");
-
-      if (WHATSAPP_TOKEN && WHATSAPP_PHONE_ID && OWNER_WHATSAPP) {
-        const dateParts = reservation_date.split("-");
-        const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
-        const formattedTime = reservation_time.substring(0, 5);
-        const cleanPhone = OWNER_WHATSAPP.replace(/[\s\-()]/g, "");
-
-        const message =
-          `🍕 *Nueva reserva CONFIRMADA en Lo Zio*\n\n` +
-          `👤 Nombre: ${guest_name}\n` +
-          `📞 Teléfono: ${phone}\n` +
-          `👥 Personas: ${guestsNum}\n` +
-          `📅 Fecha: ${formattedDate}\n` +
-          `🕐 Hora: ${formattedTime}\n` +
-          `🪑 Mesa${tableIds.length > 1 ? "s" : ""}: ${tableNames}\n` +
-          `📍 Local: ${location}${notes ? `\n📝 Notas: ${notes}` : ""}`;
-
-        await fetch(`https://graph.facebook.com/v19.0/${WHATSAPP_PHONE_ID}/messages`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${WHATSAPP_TOKEN}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            messaging_product: "whatsapp",
-            to: cleanPhone,
-            type: "text",
-            text: { body: message },
-          }),
-        });
-      }
-    } catch (whatsappError) {
-      console.error("WhatsApp notification failed (non-blocking):", whatsappError);
-    }
-
     return new Response(
       JSON.stringify({
         success: true,
