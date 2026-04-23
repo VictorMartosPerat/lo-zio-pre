@@ -1,0 +1,204 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=Lato:wght@300;400;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 36 33% 97%;
+    --foreground: 20 20% 15%;
+
+    --card: 36 30% 95%;
+    --card-foreground: 20 20% 15%;
+
+    --popover: 36 33% 97%;
+    --popover-foreground: 20 20% 15%;
+
+    --primary: 8 72% 42%;
+    --primary-foreground: 36 33% 97%;
+
+    --secondary: 82 30% 35%;
+    --secondary-foreground: 36 33% 97%;
+
+    --muted: 36 20% 90%;
+    --muted-foreground: 20 10% 45%;
+
+    --accent: 36 60% 50%;
+    --accent-foreground: 20 20% 15%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 30 20% 82%;
+    --input: 30 20% 82%;
+    --ring: 8 72% 42%;
+    --menu-teal: 187 45% 38%;
+    --menu-teal-foreground: 0 0% 100%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    --font-display: 'Playfair Display', Georgia, serif;
+    --font-body: 'Lato', 'Helvetica Neue', sans-serif;
+  }
+
+  .dark {
+    --background: 20 20% 10%;
+    --foreground: 36 33% 97%;
+    --card: 20 20% 14%;
+    --card-foreground: 36 33% 97%;
+    --popover: 20 20% 10%;
+    --popover-foreground: 36 33% 97%;
+    --primary: 8 72% 50%;
+    --primary-foreground: 36 33% 97%;
+    --secondary: 82 30% 40%;
+    --secondary-foreground: 36 33% 97%;
+    --muted: 20 15% 20%;
+    --muted-foreground: 36 15% 65%;
+    --accent: 36 60% 50%;
+    --accent-foreground: 20 20% 10%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 20 15% 25%;
+    --input: 20 15% 25%;
+    --ring: 8 72% 50%;
+    --menu-teal: 187 45% 45%;
+    --menu-teal-foreground: 0 0% 100%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+  }
+}
+
+@layer components {
+  .hero-overlay {
+    background: linear-gradient(
+      to bottom,
+      hsla(20, 20%, 10%, 0.4) 0%,
+      hsla(20, 20%, 10%, 0.7) 100%
+    );
+  }
+}
+
+/* Hamburger hidden by default on mobile portrait, shown in landscape */
+.landscape-hamburger {
+  display: none;
+}
+.landscape-dropdown {
+  display: none;
+}
+
+/* Mobile landscape: hero + nav compact */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+  .hero-section {
+    min-height: 100dvh !important;
+    height: 100dvh !important;
+  }
+  .hero-content {
+    padding-top: 60px;
+    padding-bottom: 20px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 430px) and (max-width: 932px) {
+  .landscape-hamburger {
+    display: block !important;
+  }
+  .landscape-dropdown {
+    display: flex !important;
+  }
+
+  /* Compact nav: 48px */
+  nav.fixed {
+    height: 48px !important;
+    min-height: 48px !important;
+  }
+  nav.fixed > div {
+    height: 100%;
+  }
+  nav.fixed img {
+    height: 1.75rem !important;
+  }
+
+  .landscape-compact section {
+    padding-top: 1.5rem !important;
+    padding-bottom: 1.5rem !important;
+  }
+
+  .landscape-hide-bottom-nav {
+    display: none !important;
+  }
+
+  .landscape-form-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.75rem !important;
+  }
+
+  .landscape-form-grid > *:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+
+  .landscape-floor-scroll {
+    overflow: auto !important;
+    max-height: 60vh !important;
+  }
+
+  .landscape-compact .py-16 {
+    padding-top: 1.5rem !important;
+    padding-bottom: 1.5rem !important;
+  }
+
+  .landscape-compact .mb-16 {
+    margin-bottom: 1rem !important;
+  }
+
+  .landscape-compact .mb-12 {
+    margin-bottom: 0.75rem !important;
+  }
+
+  .landscape-compact .py-6 {
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+  }
+}
+
+/* Calendar reservation dot indicator */
+.reservation-dot {
+  position: relative;
+}
+.reservation-dot::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: hsl(var(--destructive));
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
