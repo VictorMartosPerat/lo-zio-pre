@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { toast } from "sonner";
-import { CalendarIcon, ChevronDown, ChevronUp, Pencil, Settings, BarChart3, Star, Users, Image as ImageIcon, Package, MapPin, ArrowRight } from "lucide-react";
+import { CalendarIcon, ChevronDown, ChevronUp, Pencil, Settings, BarChart3, Star, Users, Image as ImageIcon, Package, MapPin, ArrowRight, ShieldCheck } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
