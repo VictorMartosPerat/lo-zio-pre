@@ -558,7 +558,7 @@ const Checkout = () => {
               <div className="mb-6 bg-card border border-border rounded-xl p-5">
                 <h2 className="font-display text-base font-bold text-foreground mb-4 flex items-center gap-2">
                   <CalendarClock className="w-4 h-4 text-menu-teal" />
-                  ¿Cuándo quieres tu pedido?
+                  {t("checkout.whenTitle")}
                 </h2>
 
                 <div className="grid grid-cols-2 gap-3 mb-4">
