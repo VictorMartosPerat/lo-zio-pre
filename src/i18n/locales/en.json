@@ -508,5 +508,30 @@
     "tiramisuDesc": "Homemade · artisan",
     "addExtrasCustom": "Choose your ingredients",
     "freeCounter": "{{count}}/{{max}} included · extra ones are charged"
+  },
+  "incomingOrder": {
+    "title": "New order!",
+    "transferredBanner": "⚠️ Order transferred from {{from}}",
+    "customer": "Customer",
+    "phone": "Phone",
+    "items": "Items",
+    "delivery": "Delivery",
+    "pickup": "In-store pickup",
+    "address": "Address",
+    "total": "Total",
+    "estimatedTime": "Estimated time",
+    "minutes": "min",
+    "accept": "Accept — {{minutes}} min",
+    "transferToTarragona": "Transfer to Tarragona",
+    "transferToArrabassada": "Transfer to Arrabassada",
+    "reject": "Reject",
+    "confirmRejectTitle": "Are you sure you want to reject this order?",
+    "confirmRejectDesc": "The customer will be notified. This action cannot be undone.",
+    "cancel": "Cancel",
+    "confirmReject": "Yes, reject",
+    "actionError": "Action could not be completed",
+    "queueBadge": "+{{count}} waiting",
+    "customerAcceptedMessage": "Your order has been accepted! Estimated time: {{minutes}} minutes. Ready around: {{time}}.",
+    "customerRejectedMessage": "Sorry, we can't accept your order right now. Please call us at {{phone}} or try again."
   }
 }
