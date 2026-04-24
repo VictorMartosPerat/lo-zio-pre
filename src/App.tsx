@@ -78,6 +78,7 @@ const App = () => (
               <Route path="/resenas" element={<ReviewPage />} />
               <Route path="/admin/pedidos/:store" element={<AdminOrders />} />
               <Route path="/mis-pedidos" element={<MyOrders />} />
+              <Route path="/unsubscribe" element={<Unsubscribe />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
