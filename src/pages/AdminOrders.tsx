@@ -10,13 +10,7 @@ import { es } from "date-fns/locale";
 import Navbar from "@/components/Navbar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -93,16 +87,16 @@ const ORDER_STATUSES = [
 ];
 
 const PAYMENT_STATUS_STYLES: Record<string, string> = {
-  pending:  "bg-yellow-100 text-yellow-800 border-yellow-200",
-  paid:     "bg-green-100 text-green-800 border-green-200",
-  failed:   "bg-red-100 text-red-800 border-red-200",
+  pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  paid: "bg-green-100 text-green-800 border-green-200",
+  failed: "bg-red-100 text-red-800 border-red-200",
   refunded: "bg-purple-100 text-purple-800 border-purple-200",
 };
 
 const PAYMENT_STATUS_LABELS: Record<string, string> = {
-  pending:  "Sin cobrar",
-  paid:     "Pagado",
-  failed:   "Fallido",
+  pending: "Sin cobrar",
+  paid: "Pagado",
+  failed: "Fallido",
   refunded: "Reembolsado",
 };
 
@@ -155,11 +149,13 @@ const AdminOrders = () => {
         .on(
           "postgres_changes",
           { event: "*", schema: "public", table: "orders", filter: `pickup_store=eq.${store}` },
-          () => fetchOrders()
+          () => fetchOrders(),
         )
         .subscribe();
 
-      return () => { supabase.removeChannel(channel); };
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [isAdmin, store, fetchOrders]);
 
@@ -173,17 +169,12 @@ const AdminOrders = () => {
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     setUpdatingId(orderId);
-    const { error } = await supabase
-      .from("orders")
-      .update({ status: newStatus })
-      .eq("id", orderId);
+    const { error } = await supabase.from("orders").update({ status: newStatus }).eq("id", orderId);
 
     if (error) {
       toast.error("Error al actualizar el estado");
     } else {
-      setOrders((prev) =>
-        prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
-      );
+      setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o)));
       toast.success("Estado actualizado");
     }
     setUpdatingId(null);
@@ -202,19 +193,20 @@ const AdminOrders = () => {
       }
 
       // 2. Cancel order
-      const { error } = await supabase
-        .from("orders")
-        .update({ status: "cancelled" })
-        .eq("id", order.id);
+      const { error } = await supabase.from("orders").update({ status: "cancelled" }).eq("id", order.id);
 
       if (error) throw new Error(error.message);
 
       setOrders((prev) =>
         prev.map((o) =>
           o.id === order.id
-            ? { ...o, status: "cancelled", payment_status: order.payment_status === "paid" ? "refunded" : o.payment_status }
-            : o
-        )
+            ? {
+                ...o,
+                status: "cancelled",
+                payment_status: order.payment_status === "paid" ? "refunded" : o.payment_status,
+              }
+            : o,
+        ),
       );
       toast.success("Pedido cancelado");
     } catch (err) {
@@ -232,15 +224,12 @@ const AdminOrders = () => {
     });
   };
 
-  const filteredOrders = orders.filter((o) =>
-    filterStatus === "all" ? true : o.status === filterStatus
-  );
+  const filteredOrders = orders.filter((o) => (filterStatus === "all" ? true : o.status === filterStatus));
 
   const todayOrders = filteredOrders.filter((o) => isToday(new Date(o.created_at)));
   const olderOrders = filteredOrders.filter((o) => !isToday(new Date(o.created_at)));
 
-  const statusInfo = (value: string) =>
-    ORDER_STATUSES.find((s) => s.value === value) ?? ORDER_STATUSES[0];
+  const statusInfo = (value: string) => ORDER_STATUSES.find((s) => s.value === value) ?? ORDER_STATUSES[0];
 
   const shortId = (id: string) => id.slice(0, 8).toUpperCase();
 
@@ -258,18 +247,11 @@ const AdminOrders = () => {
       <div className="pt-24 md:pt-28 px-3 md:px-6 max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-start gap-3 mb-6">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/admin")}
-            className="mt-0.5 shrink-0"
-          >
+          <Button variant="ghost" size="icon" onClick={() => navigate("/admin")} className="mt-0.5 shrink-0">
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div className="flex-1 min-w-0">
-            <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground">
-              {location.name}
-            </h1>
+            <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground">{location.name}</h1>
             <div className="flex flex-wrap items-center gap-3 mt-1 text-sm text-muted-foreground">
               <span className="flex items-center gap-1">
                 <MapPin className="w-3.5 h-3.5" /> {location.address}
@@ -279,12 +261,7 @@ const AdminOrders = () => {
               </span>
             </div>
           </div>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={fetchOrders}
-            className="shrink-0"
-          >
+          <Button variant="outline" size="icon" onClick={fetchOrders} className="shrink-0">
             <RefreshCw className="w-4 h-4" />
           </Button>
         </div>
@@ -293,7 +270,10 @@ const AdminOrders = () => {
         <div className="grid grid-cols-3 gap-3 mb-6">
           {[
             { label: "Hoy", value: orders.filter((o) => isToday(new Date(o.created_at))).length },
-            { label: "Pendientes", value: orders.filter((o) => ["pending", "confirmed", "preparing"].includes(o.status)).length },
+            {
+              label: "Pendientes",
+              value: orders.filter((o) => ["pending", "confirmed", "preparing"].includes(o.status)).length,
+            },
             { label: "Listos", value: orders.filter((o) => o.status === "ready").length },
           ].map((s) => (
             <div key={s.label} className="bg-card border border-border rounded-xl p-4 text-center">
@@ -313,7 +293,9 @@ const AdminOrders = () => {
             <SelectContent>
               <SelectItem value="all">Todos</SelectItem>
               {ORDER_STATUSES.map((s) => (
-                <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                <SelectItem key={s.value} value={s.value}>
+                  {s.label}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -382,10 +364,10 @@ const AdminOrders = () => {
 };
 
 const NEXT_STATUS: Record<string, string> = {
-  pending:   "confirmed",
+  pending: "confirmed",
   confirmed: "preparing",
   preparing: "ready",
-  ready:     "delivered",
+  ready: "delivered",
 };
 
 interface OrderCardProps {
@@ -414,28 +396,18 @@ const OrderCard = ({
   const nextStatus = NEXT_STATUS[order.status];
   const nextInfo = nextStatus ? ORDER_STATUSES.find((s) => s.value === nextStatus) : null;
   const isDone = order.status === "delivered" || order.status === "cancelled";
-  const otherStatuses = ORDER_STATUSES.filter(
-    (s) => s.value !== order.status && s.value !== nextStatus
-  );
+  const otherStatuses = ORDER_STATUSES.filter((s) => s.value !== order.status && s.value !== nextStatus);
 
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
       {/* Card header — always visible */}
-      <button
-        type="button"
-        onClick={onToggle}
-        className="w-full text-left px-4 py-3 flex items-center gap-3"
-      >
+      <button type="button" onClick={onToggle} className="w-full text-left px-4 py-3 flex items-center gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-mono text-xs text-muted-foreground">#{shortId(order.id)}</span>
-            <span className="font-display font-bold text-sm text-foreground truncate">
-              {order.guest_name}
-            </span>
+            <span className="font-display font-bold text-sm text-foreground truncate">{order.guest_name}</span>
             <Badge className={`text-[10px] border ${info.color}`}>{info.label}</Badge>
-            <Badge
-              className={`text-[10px] border ${PAYMENT_STATUS_STYLES[order.payment_status]}`}
-            >
+            <Badge className={`text-[10px] border ${PAYMENT_STATUS_STYLES[order.payment_status]}`}>
               {PAYMENT_STATUS_LABELS[order.payment_status]}
             </Badge>
             {order.scheduled_for && (
@@ -453,26 +425,32 @@ const OrderCard = ({
             {order.scheduled_for && (
               <span className="flex items-center gap-1 font-semibold text-purple-700">
                 <CalendarClock className="w-3 h-3" />
-                Para {format(new Date(order.scheduled_for), "d MMM 'a las' HH:mm", { locale: es })}
+                {format(new Date(order.scheduled_for), "d MMM HH:mm", { locale: es })}
               </span>
             )}
             <span className="flex items-center gap-1">
               {order.order_type === "delivery" ? (
-                <><Truck className="w-3 h-3" /> Reparto</>
+                <>
+                  <Truck className="w-3 h-3" /> Reparto
+                </>
               ) : (
-                <><Store className="w-3 h-3" /> Recogida</>
+                <>
+                  <Store className="w-3 h-3" /> Recogida
+                </>
               )}
             </span>
             <span className="flex items-center gap-1">
               {order.payment_method === "cash" ? (
-                <><Banknote className="w-3 h-3" /> Efectivo</>
+                <>
+                  <Banknote className="w-3 h-3" /> Efectivo
+                </>
               ) : (
-                <><CreditCard className="w-3 h-3" /> Tarjeta</>
+                <>
+                  <CreditCard className="w-3 h-3" /> Tarjeta
+                </>
               )}
             </span>
-            <span className="font-semibold text-foreground ml-auto">
-              {order.total_amount.toFixed(2)} €
-            </span>
+            <span className="font-semibold text-foreground ml-auto">{order.total_amount.toFixed(2)} €</span>
           </div>
         </div>
         {expanded ? (
@@ -510,9 +488,7 @@ const OrderCard = ({
 
           {/* Items */}
           <div>
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-              Artículos
-            </p>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Artículos</p>
             <div className="space-y-1.5">
               {order.order_items.map((item) => (
                 <div key={item.id} className="flex items-start justify-between gap-2 text-sm">
@@ -521,14 +497,10 @@ const OrderCard = ({
                       {item.quantity}× {item.item_name}
                     </span>
                     {item.item_description && (
-                      <p className="text-xs text-muted-foreground truncate">
-                        {item.item_description}
-                      </p>
+                      <p className="text-xs text-muted-foreground truncate">{item.item_description}</p>
                     )}
                   </div>
-                  <span className="text-muted-foreground shrink-0">
-                    {item.total_price.toFixed(2)} €
-                  </span>
+                  <span className="text-muted-foreground shrink-0">{item.total_price.toFixed(2)} €</span>
                 </div>
               ))}
             </div>
@@ -537,7 +509,8 @@ const OrderCard = ({
           {/* Notes */}
           {order.notes && (
             <div className="bg-muted/50 rounded-lg px-3 py-2 text-sm text-muted-foreground">
-              <span className="font-semibold">Nota: </span>{order.notes}
+              <span className="font-semibold">Nota: </span>
+              {order.notes}
             </div>
           )}
 
@@ -568,10 +541,7 @@ const OrderCard = ({
                 {otherStatuses
                   .filter((s) => s.value !== "cancelled")
                   .map((s) => (
-                    <DropdownMenuItem
-                      key={s.value}
-                      onClick={() => onStatusChange(order.id, s.value)}
-                    >
+                    <DropdownMenuItem key={s.value} onClick={() => onStatusChange(order.id, s.value)}>
                       {s.label}
                     </DropdownMenuItem>
                   ))}
@@ -600,8 +570,7 @@ const OrderCard = ({
             <AlertDialogDescription asChild>
               <div className="space-y-3">
                 <p>
-                  Estás a punto de cancelar el pedido de{" "}
-                  <strong>{order.guest_name}</strong> por{" "}
+                  Estás a punto de cancelar el pedido de <strong>{order.guest_name}</strong> por{" "}
                   <strong>{order.total_amount.toFixed(2)} €</strong>.
                 </p>
 
@@ -622,9 +591,7 @@ const OrderCard = ({
                   <PhoneCall className="w-4 h-4 text-menu-teal" />
                   Llamar a {order.guest_name} — {order.guest_phone}
                 </a>
-                <p className="text-xs text-muted-foreground">
-                  Se recomienda avisar al cliente antes de cancelar.
-                </p>
+                <p className="text-xs text-muted-foreground">Se recomienda avisar al cliente antes de cancelar.</p>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
