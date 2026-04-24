@@ -57,6 +57,20 @@ const OrderConfirmation = () => {
     }
 
     const fetchOrder = async () => {
+      // If we came back from a Stripe redirect (Apple Pay / Google Pay / 3DS),
+      // mark the order as paid based on the payment_intent in the URL.
+      const paymentIntentId = searchParams.get("payment_intent");
+      const redirectStatus = searchParams.get("redirect_status");
+      if (paymentIntentId && redirectStatus === "succeeded") {
+        await supabase
+          .from("orders")
+          .update({
+            payment_status: "paid",
+            stripe_payment_intent_id: paymentIntentId,
+          })
+          .eq("id", orderId);
+      }
+
       const { data: orderData, error: orderError } = await supabase
         .from("orders")
         .select("*")
@@ -80,7 +94,7 @@ const OrderConfirmation = () => {
     };
 
     fetchOrder();
-  }, [orderId]);
+  }, [orderId, searchParams]);
 
   if (loading) {
     return (
