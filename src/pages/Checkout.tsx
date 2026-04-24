@@ -171,8 +171,11 @@ const Checkout = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const stripe = useStripe();
-  const elements = useElements();
+  // Stripe payment step state
+  const [stripeStep, setStripeStep] = useState<{
+    orderId: string;
+    clientSecret: string;
+  } | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
