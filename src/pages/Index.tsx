@@ -1,5 +1,6 @@
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
+import TestEnvBanner from "@/components/TestEnvBanner";
 import MenuSection from "@/components/MenuSection";
 import ReservationSection from "@/components/ReservationSection";
 import FAQSection from "@/components/FAQSection";
@@ -24,6 +25,7 @@ const Index = () => {
           transition: isAnimating ? "transform 0.3s ease" : "none",
         }}
       >
+        <TestEnvBanner />
         <HeroSection />
         <MenuSection />
         <ReservationSection />
