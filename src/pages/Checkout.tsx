@@ -646,9 +646,9 @@ const Checkout = () => {
 
                     {/* Time selector */}
                     <div>
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Hora</p>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{t("checkout.time")}</p>
                       {timeSlots.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">No hay horarios disponibles para este día.</p>
+                        <p className="text-sm text-muted-foreground">{t("checkout.noSlots")}</p>
                       ) : (
                         <div className="flex gap-2 flex-wrap">
                           {timeSlots.map((slot) => (
