@@ -403,7 +403,14 @@ const Admin = () => {
       <div className="pt-24 md:pt-28 pb-16 px-3 md:px-4 max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="font-display text-2xl md:text-4xl font-bold text-foreground">{t("admin.title")}</h1>
+            <h1 className="font-display text-2xl md:text-4xl font-bold text-foreground">
+              {t("admin.title")}
+              {pizzeria && (
+                <span className="block md:inline md:ml-3 text-base md:text-2xl font-display font-semibold text-menu-teal mt-1 md:mt-0">
+                  · {pizzeria === "tarragona" ? "Pizzería Tarragona" : "Pizzería Arrabassada"}
+                </span>
+              )}
+            </h1>
             <p className="text-muted-foreground font-body mt-1 md:mt-2 text-sm">{t("admin.subtitle")}</p>
           </div>
           <AdminManualReservation onCreated={fetchReservations} />
