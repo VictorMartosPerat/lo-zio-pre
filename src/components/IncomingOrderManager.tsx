@@ -66,7 +66,7 @@ const IncomingOrderManager = () => {
 
   const [queue, setQueue] = useState<IncomingOrder[]>([]);
   const [items, setItems] = useState<OrderItem[]>([]);
-  const [estimatedTime, setEstimatedTime] = useState(TIME_DEFAULT);
+  const [estimatedTime, setEstimatedTime] = useState(TIME_DEFAULT_PICKUP);
   const [busy, setBusy] = useState(false);
   const [showRejectConfirm, setShowRejectConfirm] = useState(false);
 
