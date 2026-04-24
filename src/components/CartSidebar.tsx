@@ -87,7 +87,7 @@ const CartSidebar = () => {
   };
 
   return (
-    <div className="sticky top-24 flex flex-col rounded-2xl border border-border bg-card shadow-lg overflow-hidden max-h-[calc(100vh-7rem)]">
+    <div className="flex flex-col rounded-2xl border border-border bg-card shadow-lg overflow-hidden">
       {/* Header */}
       <div className="px-4 py-3 border-b border-border shrink-0">
         <div className="flex items-center gap-2">
