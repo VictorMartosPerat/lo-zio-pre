@@ -39,42 +39,65 @@ const Profile = () => {
       .from("profiles")
       .select("full_name, phone, address, city, postal_code, allergies, food_preferences, favorite_table_area")
       .eq("user_id", user!.id)
-      .single();
-    if (data && !error) {
-      setProfile({
-        full_name: data.full_name || "",
-        phone: data.phone || "",
-        address: data.address || "",
-        city: data.city || "",
-        postal_code: data.postal_code || "",
-        allergies: (data.allergies as string[]) || [],
-        food_preferences: data.food_preferences || "",
-        favorite_table_area: data.favorite_table_area || "",
-      });
-    }
+      .maybeSingle();
+
+    if (error || !data) return;
+
+    setProfile({
+      full_name: data.full_name || "",
+      phone: data.phone || "",
+      address: data.address || "",
+      city: data.city || "",
+      postal_code: data.postal_code || "",
+      allergies: (data.allergies as string[]) || [],
+      food_preferences: data.food_preferences || "",
+      favorite_table_area: data.favorite_table_area || "",
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase
+
+    const payload = {
+      user_id: user!.id,
+      full_name: profile.full_name,
+      phone: profile.phone,
+      address: profile.address,
+      city: profile.city,
+      postal_code: profile.postal_code,
+      allergies: profile.allergies,
+      food_preferences: profile.food_preferences,
+      favorite_table_area: profile.favorite_table_area,
+    };
+
+    const { data: existingProfile, error: existingProfileError } = await supabase
       .from("profiles")
-      .update({
-        full_name: profile.full_name,
-        phone: profile.phone,
-        address: profile.address,
-        city: profile.city,
-        postal_code: profile.postal_code,
-        allergies: profile.allergies,
-        food_preferences: profile.food_preferences,
-        favorite_table_area: profile.favorite_table_area,
-      })
-      .eq("user_id", user!.id);
+      .select("id")
+      .eq("user_id", user!.id)
+      .maybeSingle();
+
+    if (existingProfileError) {
+      toast.error(t("profile.saveError"));
+      setLoading(false);
+      return;
+    }
+
+    const { error } = existingProfile
+      ? await supabase
+          .from("profiles")
+          .update(payload)
+          .eq("user_id", user!.id)
+      : await supabase
+          .from("profiles")
+          .insert(payload);
+
     if (error) {
       toast.error(t("profile.saveError"));
     } else {
       toast.success(t("profile.saveSuccess"));
     }
+
     setLoading(false);
   };
 
