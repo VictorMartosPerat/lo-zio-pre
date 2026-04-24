@@ -53,6 +53,7 @@ const locationNames: Record<string, string> = {
 const Admin = () => {
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: adminLoading } = useIsAdmin();
+  const { pizzeria } = usePizzeriaRole();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const isMobile = useIsMobile();
