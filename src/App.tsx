@@ -29,9 +29,6 @@ import ReviewPage from "./pages/ReviewPage.tsx";
 import AdminOrders from "./pages/AdminOrders.tsx";
 import MyOrders from "./pages/MyOrders.tsx";
 
-const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-const stripePromise = stripeKey ? loadStripe(stripeKey) : null;
-
 const queryClient = new QueryClient();
 
 const AdminNotificationListener = () => {
