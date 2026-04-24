@@ -250,10 +250,12 @@ const Checkout = () => {
       orderType: z.enum(["pickup", "delivery"]),
       pickupStore: z.string().optional(),
       address: z.string().optional(),
+      portal: z.string().optional(),
       city: z.string().optional(),
       postalCode: z.string().optional(),
       paymentMethod: z.enum(["cash", "stripe"]),
       notes: z.string().max(500).optional(),
+      deliveryNotes: z.string().max(500).optional(),
     })
     .refine(
       (data) => {
@@ -272,6 +274,15 @@ const Checkout = () => {
         return true;
       },
       { message: t("checkout.addressRequired"), path: ["address"] },
+    )
+    .refine(
+      (data) => {
+        if (data.orderType === "delivery") {
+          return data.portal && data.portal.trim().length > 0;
+        }
+        return true;
+      },
+      { message: "El portal es obligatorio", path: ["portal"] },
     );
 
   const [form, setForm] = useState({
