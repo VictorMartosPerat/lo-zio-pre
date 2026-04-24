@@ -14,8 +14,6 @@ import InstallBanner from "@/components/InstallBanner";
 import UpdateBanner from "@/components/UpdateBanner";
 import AdminFAB from "@/components/AdminFAB";
 import { useAdminNotifications } from "@/hooks/useAdminNotifications";
-import { loadStripe } from "@stripe/stripe-js";
-import { Elements } from "@stripe/react-stripe-js";
 import Index from "./pages/Index.tsx";
 import Auth from "./pages/Auth.tsx";
 import Profile from "./pages/Profile.tsx";
@@ -30,9 +28,6 @@ import NotFound from "./pages/NotFound.tsx";
 import ReviewPage from "./pages/ReviewPage.tsx";
 import AdminOrders from "./pages/AdminOrders.tsx";
 import MyOrders from "./pages/MyOrders.tsx";
-
-const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-const stripePromise = stripeKey ? loadStripe(stripeKey) : null;
 
 const queryClient = new QueryClient();
 
@@ -73,7 +68,7 @@ const App = () => (
               <Route path="/mis-reservas" element={<MyReservations />} />
               <Route path="/perfil" element={<Profile />} />
               <Route path="/admin" element={<Admin />} />
-              <Route path="/pedido" element={<Elements stripe={stripePromise}><Checkout /></Elements>} />
+              <Route path="/pedido" element={<Checkout />} />
               <Route path="/pedido-confirmado" element={<OrderConfirmation />} />
               <Route path="/locales" element={<Locales />} />
               <Route path="/locales/:slug" element={<LocationDetail />} />

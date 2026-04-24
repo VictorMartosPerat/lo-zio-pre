@@ -39,15 +39,143 @@ import { AlertTriangle, CalendarClock, Zap } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { z } from "zod";
-import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+import {
+  Elements,
+  PaymentElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
+
+// Publishable Stripe key (safe to expose). Override via VITE_STRIPE_PUBLISHABLE_KEY if set.
+const STRIPE_PUBLISHABLE_KEY =
+  import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ||
+  "pk_test_51TKagYE97zvFrxLoMt0lKY9AQT2QGLPS3IjhH1xvZigTxwAbF7CurXX9xSmgVKqPalQKvi9wdN2fS1kG8LjtebmP00I4NCgo2w";
+const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY);
+
+// Inner Stripe payment form — must be rendered inside <Elements>
+const StripePaymentForm = ({
+  orderId,
+  totalPrice,
+  customer,
+  onBack,
+  onSuccess,
+}: {
+  orderId: string;
+  totalPrice: number;
+  customer: { name: string; email: string; phone: string };
+  onBack: () => void;
+  onSuccess: () => void;
+}) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const { t } = useTranslation();
+  const [paying, setPaying] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handlePay = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+    setPaying(true);
+    setErrorMsg(null);
+
+    const { error, paymentIntent } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: `${window.location.origin}/pedido-confirmado?id=${orderId}`,
+        payment_method_data: {
+          billing_details: {
+            name: customer.name,
+            email: customer.email,
+            phone: customer.phone,
+          },
+        },
+      },
+      redirect: "if_required",
+    });
+
+    if (error) {
+      setErrorMsg(error.message || t("checkout.stripeError"));
+      await supabase
+        .from("orders")
+        .update({ payment_status: "failed" })
+        .eq("id", orderId);
+      setPaying(false);
+      return;
+    }
+
+    if (paymentIntent?.status === "succeeded") {
+      await supabase
+        .from("orders")
+        .update({
+          payment_status: "paid",
+          stripe_payment_intent_id: paymentIntent.id,
+        })
+        .eq("id", orderId);
+      onSuccess();
+      return;
+    }
+
+    // For redirect-based methods (e.g. some wallets), browser will be redirected.
+    setPaying(false);
+  };
+
+  return (
+    <form onSubmit={handlePay} className="space-y-6">
+      <div className="bg-card rounded-xl p-6 border border-border">
+        <h2 className="font-display text-xl font-bold text-foreground mb-4">
+          {t("checkout.cardDetails")}
+        </h2>
+        <PaymentElement
+          options={{
+            layout: "tabs",
+            wallets: { applePay: "auto", googlePay: "auto" },
+          }}
+        />
+        {errorMsg && (
+          <p className="text-destructive text-sm mt-3">{errorMsg}</p>
+        )}
+        <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1">
+          <CreditCard className="w-3 h-3" />
+          {t("checkout.stripeSecure")}
+        </p>
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-3">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onBack}
+          disabled={paying}
+          className="sm:w-auto"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          {t("checkout.backToMenu") /* generic back label */}
+        </Button>
+        <Button
+          type="submit"
+          disabled={!stripe || paying}
+          className="flex-1 bg-menu-teal hover:bg-menu-teal/90 text-menu-teal-foreground font-display text-lg py-7 min-h-[56px]"
+        >
+          {paying
+            ? t("checkout.processing")
+            : `${t("checkout.confirmOrder")} · ${totalPrice.toFixed(2)} €`}
+        </Button>
+      </div>
+    </form>
+  );
+};
 
 const Checkout = () => {
   const { items, totalPrice, updateQuantity, removeItem, clearCart } = useCart();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const stripe = useStripe();
-  const elements = useElements();
+  // Stripe payment step state
+  const [stripeStep, setStripeStep] = useState<{
+    orderId: string;
+    clientSecret: string;
+  } | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -256,18 +384,8 @@ const Checkout = () => {
       const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
       if (itemsError) throw itemsError;
 
-      // 3. Stripe payment if selected
+      // 3. Stripe payment if selected — create PaymentIntent and switch to payment step
       if (form.paymentMethod === "stripe") {
-        if (!stripe || !elements) {
-          throw new Error(t("checkout.stripeNotLoaded"));
-        }
-
-        const cardElement = elements.getElement(CardElement);
-        if (!cardElement) {
-          throw new Error(t("checkout.stripeNotLoaded"));
-        }
-
-        // Get PaymentIntent clientSecret from Edge Function
         const { data: fnData, error: fnError } = await supabase.functions.invoke(
           "create-payment-intent",
           { body: { orderId: order.id } },
@@ -277,40 +395,12 @@ const Checkout = () => {
           throw new Error(fnError?.message || t("checkout.stripeError"));
         }
 
-        // Confirm card payment
-        const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
-          fnData.clientSecret,
-          {
-            payment_method: {
-              card: cardElement,
-              billing_details: {
-                name: form.name,
-                email: form.email,
-                phone: form.phone,
-              },
-            },
-          },
-        );
-
-        if (stripeError) {
-          await supabase
-            .from("orders")
-            .update({ payment_status: "failed" })
-            .eq("id", order.id);
-          throw new Error(stripeError.message || t("checkout.stripeError"));
-        }
-
-        if (paymentIntent?.status === "succeeded") {
-          await supabase
-            .from("orders")
-            .update({
-              payment_status: "paid",
-              stripe_payment_intent_id: paymentIntent.id,
-            })
-            .eq("id", order.id);
-        }
+        setStripeStep({ orderId: order.id, clientSecret: fnData.clientSecret });
+        setLoading(false);
+        return;
       }
 
+      // Cash flow — order is complete, redirect immediately
       clearCart();
       navigate(`/pedido-confirmado?id=${order.id}`);
     } catch (err) {
@@ -337,6 +427,45 @@ const Checkout = () => {
           >
             <ArrowLeft className="w-4 h-4 mr-2" /> {t("checkout.viewMenu")}
           </Button>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Stripe payment step — render PaymentElement (Apple Pay, Google Pay, Card, etc.)
+  if (stripeStep) {
+    return (
+      <div className="min-h-screen bg-background pb-20 md:pb-0">
+        <Navbar />
+        <div className="pt-24 md:pt-28 pb-24 px-3 md:px-4">
+          <div className="max-w-2xl mx-auto">
+            <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-2">
+              {t("checkout.payment")}
+            </h1>
+            <p className="text-muted-foreground font-body mb-8">
+              Total: <span className="font-bold text-foreground">{totalPrice.toFixed(2)} €</span>
+            </p>
+
+            <Elements
+              stripe={stripePromise}
+              options={{
+                clientSecret: stripeStep.clientSecret,
+                appearance: { theme: "stripe" },
+              }}
+            >
+              <StripePaymentForm
+                orderId={stripeStep.orderId}
+                totalPrice={totalPrice}
+                customer={{ name: form.name, email: form.email, phone: form.phone }}
+                onBack={() => setStripeStep(null)}
+                onSuccess={() => {
+                  clearCart();
+                  navigate(`/pedido-confirmado?id=${stripeStep.orderId}`);
+                }}
+              />
+            </Elements>
+          </div>
         </div>
         <Footer />
       </div>
@@ -812,33 +941,15 @@ const Checkout = () => {
                   </label>
                 </RadioGroup>
 
-                {/* Stripe Card Element */}
+                {/* Stripe payment notice — actual PaymentElement appears in the next step */}
                 {form.paymentMethod === "stripe" && (
-                  <div className="mt-4">
-                    <Label>{t("checkout.cardDetails")}</Label>
-                    <div className="mt-1 rounded-md border border-input bg-background px-3 py-3">
-                      <CardElement
-                        options={{
-                          style: {
-                            base: {
-                              fontSize: "14px",
-                              color: "hsl(var(--foreground))",
-                              "::placeholder": {
-                                color: "hsl(var(--muted-foreground))",
-                              },
-                              fontFamily: "inherit",
-                            },
-                            invalid: {
-                              color: "hsl(var(--destructive))",
-                            },
-                          },
-                          hidePostalCode: true,
-                        }}
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-                      <CreditCard className="w-3 h-3" />
+                  <div className="mt-4 rounded-md border border-dashed border-input bg-muted/30 px-4 py-3">
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                      <CreditCard className="w-3.5 h-3.5 text-menu-teal" />
                       {t("checkout.stripeSecure")}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Tras confirmar, podrás pagar con tarjeta, Apple Pay o Google Pay.
                     </p>
                   </div>
                 )}
@@ -860,7 +971,7 @@ const Checkout = () => {
 
               <Button
                 type="submit"
-                disabled={loading || (form.paymentMethod === "stripe" && !stripe)}
+                disabled={loading}
                 className="w-full bg-menu-teal hover:bg-menu-teal/90 text-menu-teal-foreground font-display text-lg py-7 min-h-[56px]"
               >
                 {loading
