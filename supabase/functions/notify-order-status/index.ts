@@ -97,7 +97,7 @@ serve(async (req) => {
     <!-- Body -->
     <div style="padding:28px 32px;">
       <p style="color:#111827;font-size:16px;margin:0 0 4px;">Hola, <strong>${record.guest_name}</strong></p>
-      <p style="color:#4b5563;font-size:15px;margin:4px 0 20px;">${statusInfo.message}</p>
+      <p style="color:#4b5563;font-size:15px;margin:4px 0 20px;">${statusInfo.message(record)}</p>
 
       <!-- Order details -->
       <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;margin-bottom:16px;">
