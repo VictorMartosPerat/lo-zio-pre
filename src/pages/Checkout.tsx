@@ -577,9 +577,9 @@ const Checkout = () => {
                   >
                     <Zap className="w-4 h-4 text-menu-teal shrink-0" />
                     <div>
-                      <p className="font-display font-bold text-sm">Lo antes posible</p>
+                      <p className="font-display font-bold text-sm">{t("checkout.asap")}</p>
                       <p className="text-xs text-muted-foreground">
-                        {isCurrentlyOpen ? "Estamos abiertos" : "Cerrado ahora"}
+                        {isCurrentlyOpen ? t("checkout.openNow") : t("checkout.closedNow")}
                       </p>
                     </div>
                   </button>
