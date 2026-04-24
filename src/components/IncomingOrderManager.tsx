@@ -54,7 +54,10 @@ const STORE_LABELS: Record<PizzeriaSlug, string> = {
 const TIME_MIN = 15;
 const TIME_MAX = 90;
 const TIME_STEP = 15;
-const TIME_DEFAULT = 45;
+const TIME_DEFAULT_PICKUP = 15;
+const TIME_DEFAULT_DELIVERY = 45;
+const defaultTimeFor = (orderType?: string) =>
+  orderType === "delivery" ? TIME_DEFAULT_DELIVERY : TIME_DEFAULT_PICKUP;
 
 const IncomingOrderManager = () => {
   const { t, i18n } = useTranslation();
