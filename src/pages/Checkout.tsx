@@ -250,10 +250,12 @@ const Checkout = () => {
       orderType: z.enum(["pickup", "delivery"]),
       pickupStore: z.string().optional(),
       address: z.string().optional(),
+      portal: z.string().optional(),
       city: z.string().optional(),
       postalCode: z.string().optional(),
       paymentMethod: z.enum(["cash", "stripe"]),
       notes: z.string().max(500).optional(),
+      deliveryNotes: z.string().max(500).optional(),
     })
     .refine(
       (data) => {
@@ -272,6 +274,15 @@ const Checkout = () => {
         return true;
       },
       { message: t("checkout.addressRequired"), path: ["address"] },
+    )
+    .refine(
+      (data) => {
+        if (data.orderType === "delivery") {
+          return data.portal && data.portal.trim().length > 0;
+        }
+        return true;
+      },
+      { message: "El portal es obligatorio", path: ["portal"] },
     );
 
   const [form, setForm] = useState({
@@ -283,11 +294,13 @@ const Checkout = () => {
     address: "",
     city: "",
     postalCode: "",
+    portal: "",
     staircase: "",
     floor: "",
     door: "",
     paymentMethod: "cash" as "cash" | "stripe",
     notes: "",
+    deliveryNotes: "",
   });
 
   const updateField = (field: string, value: string) => {
@@ -316,6 +329,32 @@ const Checkout = () => {
         fieldErrors[err.path[0] as string] = err.message;
       });
       setErrors(fieldErrors);
+
+      // Scroll to the first field with an error
+      const fieldOrder = [
+        "name",
+        "phone",
+        "email",
+        "pickupStore",
+        "address",
+        "portal",
+        "city",
+        "postalCode",
+      ];
+      const firstErrorField = fieldOrder.find((f) => fieldErrors[f]);
+      if (firstErrorField) {
+        setTimeout(() => {
+          const el =
+            document.getElementById(firstErrorField) ||
+            document.querySelector(`[data-field="${firstErrorField}"]`);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            if ("focus" in el && typeof (el as HTMLElement).focus === "function") {
+              (el as HTMLElement).focus({ preventScroll: true });
+            }
+          }
+        }, 50);
+      }
       return;
     }
 
@@ -343,6 +382,7 @@ const Checkout = () => {
           delivery_address: form.orderType === "delivery"
             ? [
                 form.address,
+                form.portal ? `Portal ${form.portal}` : null,
                 form.staircase ? `Esc. ${form.staircase}` : null,
                 form.floor ? `Piso ${form.floor}` : null,
                 form.door ? `Puerta ${form.door}` : null,
@@ -352,7 +392,12 @@ const Checkout = () => {
           delivery_postal_code: form.orderType === "delivery" ? form.postalCode : null,
           payment_method: form.paymentMethod,
           payment_status: "pending",
-          notes: form.notes || null,
+          notes: [
+            form.notes,
+            form.orderType === "delivery" && form.deliveryNotes
+              ? `🛵 Repartidor: ${form.deliveryNotes}`
+              : null,
+          ].filter(Boolean).join(" — ") || null,
           total_amount: totalPrice,
           scheduled_for: scheduledFor ? scheduledFor.toISOString() : null,
         })
@@ -839,8 +884,21 @@ const Checkout = () => {
                         />
                       </div>
 
-                      {/* Escalera / Piso / Puerta */}
-                      <div className="sm:col-span-2 grid grid-cols-3 gap-3">
+                      {/* Portal / Escalera / Piso / Puerta */}
+                      <div className="sm:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div>
+                          <Label htmlFor="portal">Portal *</Label>
+                          <Input
+                            id="portal"
+                            value={form.portal}
+                            onChange={(e) => updateField("portal", e.target.value)}
+                            placeholder="Nº 12"
+                            className={errors.portal ? "border-destructive" : ""}
+                          />
+                          {errors.portal && (
+                            <p className="text-destructive text-xs mt-1">{errors.portal}</p>
+                          )}
+                        </div>
                         <div>
                           <Label htmlFor="staircase">Escalera</Label>
                           <Input
@@ -888,6 +946,19 @@ const Checkout = () => {
                           placeholder={t("checkout.postalCodePlaceholder")}
                         />
                       </div>
+                    </div>
+
+                    {/* Notes for the delivery driver */}
+                    <div>
+                      <Label htmlFor="deliveryNotes">Notas para el repartidor</Label>
+                      <Textarea
+                        id="deliveryNotes"
+                        value={form.deliveryNotes}
+                        onChange={(e) => updateField("deliveryNotes", e.target.value)}
+                        placeholder="Timbre roto, dejar en recepción, etc."
+                        maxLength={500}
+                        rows={2}
+                      />
                     </div>
                   </div>
                 )}
