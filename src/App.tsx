@@ -13,6 +13,7 @@ import MobileBottomNav from "@/components/MobileBottomNav";
 import InstallBanner from "@/components/InstallBanner";
 import UpdateBanner from "@/components/UpdateBanner";
 import AdminFAB from "@/components/AdminFAB";
+import IncomingOrderManager from "@/components/IncomingOrderManager";
 import { useAdminNotifications } from "@/hooks/useAdminNotifications";
 import Index from "./pages/Index.tsx";
 import Auth from "./pages/Auth.tsx";
