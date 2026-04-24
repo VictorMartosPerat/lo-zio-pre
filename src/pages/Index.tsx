@@ -17,6 +17,7 @@ const Index = () => {
   return (
     <div className="relative" style={{ overflowX: "clip" }}>
       <PullToRefreshIndicator pullDistance={pullDistance} refreshing={refreshing} />
+      <TestEnvBanner />
       <Navbar />
       <div
         className="min-h-screen bg-background landscape-compact"
@@ -25,7 +26,6 @@ const Index = () => {
           transition: isAnimating ? "transform 0.3s ease" : "none",
         }}
       >
-        <TestEnvBanner />
         <HeroSection />
         <MenuSection />
         <ReservationSection />
