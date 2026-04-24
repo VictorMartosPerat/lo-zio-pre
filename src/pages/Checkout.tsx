@@ -390,6 +390,11 @@ const Checkout = () => {
       const assignedTo: "tarragona" | "arrabassada" =
         assignedStore === "arrabassada" ? "arrabassada" : "tarragona";
 
+      // For online (Stripe) payments we DO NOT assign the order to a pizzeria yet —
+      // the kitchen popup must only fire AFTER the payment is confirmed.
+      // The order will be assigned in OrderConfirmation when payment_status flips to "paid".
+      const isStripe = form.paymentMethod === "stripe";
+
       // 1. Create order in Supabase
       const { data: order, error: orderError } = await supabase
         .from("orders")
@@ -400,7 +405,7 @@ const Checkout = () => {
           guest_phone: form.phone,
           order_type: form.orderType,
           pickup_store: assignedStore,
-          assigned_to: assignedTo,
+          assigned_to: isStripe ? null : assignedTo,
           delivery_address: form.orderType === "delivery"
             ? [
                 form.address,
