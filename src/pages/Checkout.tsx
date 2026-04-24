@@ -1123,7 +1123,7 @@ const Checkout = () => {
                                 </span>
                                 <span className="font-semibold text-foreground">
                                   {extra.price === 0
-                                    ? "Gratis"
+                                    ? t("checkout.free")
                                     : `+${(extra.price * extra.quantity).toFixed(2)} €`}
                                 </span>
                               </li>
