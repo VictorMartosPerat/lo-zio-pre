@@ -39,7 +39,132 @@ import { AlertTriangle, CalendarClock, Zap } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { z } from "zod";
-import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+import {
+  Elements,
+  PaymentElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
+
+// Publishable Stripe key (safe to expose). Override via VITE_STRIPE_PUBLISHABLE_KEY if set.
+const STRIPE_PUBLISHABLE_KEY =
+  import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ||
+  "pk_test_51TKagYE97zvFrxLoMt0lKY9AQT2QGLPS3IjhH1xvZigTxwAbF7CurXX9xSmgVKqPalQKvi9wdN2fS1kG8LjtebmP00I4NCgo2w";
+const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY);
+
+// Inner Stripe payment form — must be rendered inside <Elements>
+const StripePaymentForm = ({
+  orderId,
+  totalPrice,
+  customer,
+  onBack,
+  onSuccess,
+}: {
+  orderId: string;
+  totalPrice: number;
+  customer: { name: string; email: string; phone: string };
+  onBack: () => void;
+  onSuccess: () => void;
+}) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const { t } = useTranslation();
+  const [paying, setPaying] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handlePay = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+    setPaying(true);
+    setErrorMsg(null);
+
+    const { error, paymentIntent } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: `${window.location.origin}/pedido-confirmado?id=${orderId}`,
+        payment_method_data: {
+          billing_details: {
+            name: customer.name,
+            email: customer.email,
+            phone: customer.phone,
+          },
+        },
+      },
+      redirect: "if_required",
+    });
+
+    if (error) {
+      setErrorMsg(error.message || t("checkout.stripeError"));
+      await supabase
+        .from("orders")
+        .update({ payment_status: "failed" })
+        .eq("id", orderId);
+      setPaying(false);
+      return;
+    }
+
+    if (paymentIntent?.status === "succeeded") {
+      await supabase
+        .from("orders")
+        .update({
+          payment_status: "paid",
+          stripe_payment_intent_id: paymentIntent.id,
+        })
+        .eq("id", orderId);
+      onSuccess();
+      return;
+    }
+
+    // For redirect-based methods (e.g. some wallets), browser will be redirected.
+    setPaying(false);
+  };
+
+  return (
+    <form onSubmit={handlePay} className="space-y-6">
+      <div className="bg-card rounded-xl p-6 border border-border">
+        <h2 className="font-display text-xl font-bold text-foreground mb-4">
+          {t("checkout.cardDetails")}
+        </h2>
+        <PaymentElement
+          options={{
+            layout: "tabs",
+            wallets: { applePay: "auto", googlePay: "auto" },
+          }}
+        />
+        {errorMsg && (
+          <p className="text-destructive text-sm mt-3">{errorMsg}</p>
+        )}
+        <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1">
+          <CreditCard className="w-3 h-3" />
+          {t("checkout.stripeSecure")}
+        </p>
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-3">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onBack}
+          disabled={paying}
+          className="sm:w-auto"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          {t("checkout.backToMenu") /* generic back label */}
+        </Button>
+        <Button
+          type="submit"
+          disabled={!stripe || paying}
+          className="flex-1 bg-menu-teal hover:bg-menu-teal/90 text-menu-teal-foreground font-display text-lg py-7 min-h-[56px]"
+        >
+          {paying
+            ? t("checkout.processing")
+            : `${t("checkout.confirmOrder")} · ${totalPrice.toFixed(2)} €`}
+        </Button>
+      </div>
+    </form>
+  );
+};
 
 const Checkout = () => {
   const { items, totalPrice, updateQuantity, removeItem, clearCart } = useCart();
