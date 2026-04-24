@@ -966,12 +966,12 @@ const Checkout = () => {
 
                     {/* Notes for the delivery driver */}
                     <div>
-                      <Label htmlFor="deliveryNotes">Notas para el repartidor</Label>
+                      <Label htmlFor="deliveryNotes">{t("checkout.deliveryNotesLabel")}</Label>
                       <Textarea
                         id="deliveryNotes"
                         value={form.deliveryNotes}
                         onChange={(e) => updateField("deliveryNotes", e.target.value)}
-                        placeholder="Timbre roto, dejar en recepción, etc."
+                        placeholder={t("checkout.deliveryNotesPlaceholder")}
                         maxLength={500}
                         rows={2}
                       />
