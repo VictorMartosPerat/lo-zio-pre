@@ -269,7 +269,7 @@ const Checkout = () => {
         }
         return true;
       },
-      { message: "Debes seleccionar en qué local recoges el pedido", path: ["pickupStore"] },
+      { message: t("checkout.pickupStoreRequired"), path: ["pickupStore"] },
     )
     .refine(
       (data) => {
