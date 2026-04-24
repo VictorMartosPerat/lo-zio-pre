@@ -903,12 +903,12 @@ const Checkout = () => {
                       {/* Portal / Escalera / Piso / Puerta */}
                       <div className="sm:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-3">
                         <div>
-                          <Label htmlFor="portal">Portal *</Label>
+                          <Label htmlFor="portal">{t("checkout.portal")} *</Label>
                           <Input
                             id="portal"
                             value={form.portal}
                             onChange={(e) => updateField("portal", e.target.value)}
-                            placeholder="Nº 12"
+                            placeholder={t("checkout.portalPlaceholder")}
                             className={errors.portal ? "border-destructive" : ""}
                           />
                           {errors.portal && (
@@ -916,30 +916,30 @@ const Checkout = () => {
                           )}
                         </div>
                         <div>
-                          <Label htmlFor="staircase">Escalera</Label>
+                          <Label htmlFor="staircase">{t("checkout.staircase")}</Label>
                           <Input
                             id="staircase"
                             value={form.staircase}
                             onChange={(e) => updateField("staircase", e.target.value)}
-                            placeholder="A, B…"
+                            placeholder={t("checkout.staircasePlaceholder")}
                           />
                         </div>
                         <div>
-                          <Label htmlFor="floor">Piso</Label>
+                          <Label htmlFor="floor">{t("checkout.floor")}</Label>
                           <Input
                             id="floor"
                             value={form.floor}
                             onChange={(e) => updateField("floor", e.target.value)}
-                            placeholder="1º, 2º…"
+                            placeholder={t("checkout.floorPlaceholder")}
                           />
                         </div>
                         <div>
-                          <Label htmlFor="door">Puerta</Label>
+                          <Label htmlFor="door">{t("checkout.door")}</Label>
                           <Input
                             id="door"
                             value={form.door}
                             onChange={(e) => updateField("door", e.target.value)}
-                            placeholder="1, 2ª…"
+                            placeholder={t("checkout.doorPlaceholder")}
                           />
                         </div>
                       </div>
