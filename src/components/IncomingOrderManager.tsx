@@ -139,7 +139,7 @@ const IncomingOrderManager = () => {
       stopAlarm();
       return;
     }
-    setEstimatedTime(TIME_DEFAULT);
+    setEstimatedTime(defaultTimeFor(current.order_type));
     setItems([]);
     startAlarm();
 
