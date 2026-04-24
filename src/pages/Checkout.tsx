@@ -932,7 +932,7 @@ const Checkout = () => {
 
               <Button
                 type="submit"
-                disabled={loading || (form.paymentMethod === "stripe" && !stripe)}
+                disabled={loading}
                 className="w-full bg-menu-teal hover:bg-menu-teal/90 text-menu-teal-foreground font-display text-lg py-7 min-h-[56px]"
               >
                 {loading
