@@ -902,33 +902,15 @@ const Checkout = () => {
                   </label>
                 </RadioGroup>
 
-                {/* Stripe Card Element */}
+                {/* Stripe payment notice — actual PaymentElement appears in the next step */}
                 {form.paymentMethod === "stripe" && (
-                  <div className="mt-4">
-                    <Label>{t("checkout.cardDetails")}</Label>
-                    <div className="mt-1 rounded-md border border-input bg-background px-3 py-3">
-                      <CardElement
-                        options={{
-                          style: {
-                            base: {
-                              fontSize: "14px",
-                              color: "hsl(var(--foreground))",
-                              "::placeholder": {
-                                color: "hsl(var(--muted-foreground))",
-                              },
-                              fontFamily: "inherit",
-                            },
-                            invalid: {
-                              color: "hsl(var(--destructive))",
-                            },
-                          },
-                          hidePostalCode: true,
-                        }}
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-                      <CreditCard className="w-3 h-3" />
+                  <div className="mt-4 rounded-md border border-dashed border-input bg-muted/30 px-4 py-3">
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                      <CreditCard className="w-3.5 h-3.5 text-menu-teal" />
                       {t("checkout.stripeSecure")}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Tras confirmar, podrás pagar con tarjeta, Apple Pay o Google Pay.
                     </p>
                   </div>
                 )}
