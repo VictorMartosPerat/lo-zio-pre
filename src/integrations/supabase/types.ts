@@ -135,10 +135,13 @@ export type Database = {
       }
       orders: {
         Row: {
+          accepted_at: string | null
+          assigned_to: string | null
           created_at: string
           delivery_address: string | null
           delivery_city: string | null
           delivery_postal_code: string | null
+          estimated_time: number | null
           guest_email: string
           guest_name: string
           guest_phone: string
@@ -148,18 +151,23 @@ export type Database = {
           payment_method: string
           payment_status: string
           pickup_store: string | null
+          rejection_reason: string | null
           scheduled_for: string | null
           status: string
           stripe_payment_intent_id: string | null
           stripe_session_id: string | null
           total_amount: number
+          transferred_from: string | null
           user_id: string | null
         }
         Insert: {
+          accepted_at?: string | null
+          assigned_to?: string | null
           created_at?: string
           delivery_address?: string | null
           delivery_city?: string | null
           delivery_postal_code?: string | null
+          estimated_time?: number | null
           guest_email: string
           guest_name: string
           guest_phone: string
@@ -169,18 +177,23 @@ export type Database = {
           payment_method?: string
           payment_status?: string
           pickup_store?: string | null
+          rejection_reason?: string | null
           scheduled_for?: string | null
           status?: string
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
           total_amount?: number
+          transferred_from?: string | null
           user_id?: string | null
         }
         Update: {
+          accepted_at?: string | null
+          assigned_to?: string | null
           created_at?: string
           delivery_address?: string | null
           delivery_city?: string | null
           delivery_postal_code?: string | null
+          estimated_time?: number | null
           guest_email?: string
           guest_name?: string
           guest_phone?: string
@@ -190,11 +203,13 @@ export type Database = {
           payment_method?: string
           payment_status?: string
           pickup_store?: string | null
+          rejection_reason?: string | null
           scheduled_for?: string | null
           status?: string
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
           total_amount?: number
+          transferred_from?: string | null
           user_id?: string | null
         }
         Relationships: []
@@ -480,7 +495,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "user"
+      app_role: "admin" | "user" | "pizzeriaTarragona" | "pizzeriaArrabassada"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -608,7 +623,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
+      app_role: ["admin", "user", "pizzeriaTarragona", "pizzeriaArrabassada"],
     },
   },
 } as const

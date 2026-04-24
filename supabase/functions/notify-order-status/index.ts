@@ -7,17 +7,25 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-// Only send emails for these two statuses
-const STATUS_INFO: Record<string, { label: string; emoji: string; message: string }> = {
+// Only send emails for these statuses
+const STATUS_INFO: Record<string, { label: string; emoji: string; message: (r: Record<string, unknown>) => string }> = {
   confirmed: {
-    label: "Confirmado",
+    label: "Aceptado",
     emoji: "✅",
-    message: "Hemos recibido y confirmado tu pedido. ¡Nos ponemos manos a la obra!",
+    message: (r) => {
+      const minutes = Number(r.estimated_time) || 45;
+      const acceptedAt = r.accepted_at ? new Date(r.accepted_at as string) : new Date();
+      const ready = new Date(acceptedAt.getTime() + minutes * 60_000);
+      const hh = String(ready.getHours()).padStart(2, "0");
+      const mm = String(ready.getMinutes()).padStart(2, "0");
+      return `¡Tu pedido ha sido aceptado! Tiempo estimado: <strong>${minutes} minutos</strong>. Hora estimada: <strong>${hh}:${mm}</strong>.`;
+    },
   },
   cancelled: {
-    label: "Cancelado",
+    label: "Rechazado",
     emoji: "❌",
-    message: "Tu pedido ha sido cancelado. Si tienes alguna duda, llámanos directamente al local.",
+    message: (r) => (r.rejection_reason as string) ||
+      "Lo sentimos, en este momento no podemos aceptar tu pedido. Llámanos directamente al local o inténtalo de nuevo.",
   },
 };
 
@@ -89,7 +97,7 @@ serve(async (req) => {
     <!-- Body -->
     <div style="padding:28px 32px;">
       <p style="color:#111827;font-size:16px;margin:0 0 4px;">Hola, <strong>${record.guest_name}</strong></p>
-      <p style="color:#4b5563;font-size:15px;margin:4px 0 20px;">${statusInfo.message}</p>
+      <p style="color:#4b5563;font-size:15px;margin:4px 0 20px;">${statusInfo.message(record)}</p>
 
       <!-- Order details -->
       <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:16px;margin-bottom:16px;">
