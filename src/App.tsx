@@ -62,6 +62,7 @@ const App = () => (
             <CartFloatingButton />
             <MobileBottomNav />
             <AdminFAB />
+            <IncomingOrderManager />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
