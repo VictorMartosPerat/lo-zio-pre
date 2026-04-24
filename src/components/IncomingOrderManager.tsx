@@ -94,20 +94,33 @@ const IncomingOrderManager = () => {
       .on(
         "postgres_changes",
         {
-          // catches transfers TO this pizzeria
           event: "UPDATE",
           schema: "public",
           table: "orders",
-          filter: `assigned_to=eq.${pizzeria}`,
         },
         (payload) => {
-          const order = payload.new as IncomingOrder;
-          const prev = payload.old as Partial<IncomingOrder>;
-          // Only react if it was just transferred TO us and is still pending
-          if (prev.assigned_to === pizzeria) return;
-          if (seenIdsRef.current.has(order.id)) return;
-          seenIdsRef.current.add(order.id);
-          setQueue((q) => [...q, order]);
+          const order = payload.new as IncomingOrder & { status?: string };
+          const prev = payload.old as Partial<IncomingOrder & { status?: string }>;
+
+          // Case A: order was transferred TO us and is still pending → enqueue
+          const becameOurs =
+            order.assigned_to === pizzeria && prev.assigned_to !== pizzeria;
+          if (becameOurs && order.status === "pending") {
+            if (!seenIdsRef.current.has(order.id)) {
+              seenIdsRef.current.add(order.id);
+              setQueue((q) => [...q, order]);
+            }
+            return;
+          }
+
+          // Case B: order is no longer pending OR was transferred AWAY from us
+          // → remove from queue on every device so alarm/popup stops everywhere
+          const noLongerPending = prev.status === "pending" && order.status !== "pending";
+          const transferredAway =
+            prev.assigned_to === pizzeria && order.assigned_to !== pizzeria;
+          if (noLongerPending || transferredAway) {
+            setQueue((q) => q.filter((o) => o.id !== order.id));
+          }
         },
       )
       .subscribe();
