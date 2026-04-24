@@ -124,7 +124,7 @@ const StripePaymentForm = ({
     <form onSubmit={handlePay} className="space-y-6">
       <div className="bg-card rounded-xl p-6 border border-border">
         <h2 className="font-display text-xl font-bold text-foreground mb-4">
-          {t("checkout.cardDetails")}
+          {t("checkout.paymentMethods")}
         </h2>
         <PaymentElement
           options={{
