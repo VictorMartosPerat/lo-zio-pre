@@ -605,8 +605,8 @@ const Checkout = () => {
                   >
                     <CalendarClock className="w-4 h-4 text-menu-teal shrink-0" />
                     <div>
-                      <p className="font-display font-bold text-sm">Programar</p>
-                      <p className="text-xs text-muted-foreground">Elige día y hora</p>
+                      <p className="font-display font-bold text-sm">{t("checkout.schedule")}</p>
+                      <p className="text-xs text-muted-foreground">{t("checkout.schedulePick")}</p>
                     </div>
                   </button>
                 </div>
