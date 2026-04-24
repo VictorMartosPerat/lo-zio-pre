@@ -385,6 +385,10 @@ const Checkout = () => {
       if (form.orderType === "delivery") {
         assignedStore = await getNearestStore(form.address, form.city, form.postalCode, fulfillAt);
       }
+      // Pizzeria the kitchen-staff popup will fire for. Only Tarragona & Arrabassada
+      // have staff accounts; rincon orders fall back to tarragona.
+      const assignedTo: "tarragona" | "arrabassada" =
+        assignedStore === "arrabassada" ? "arrabassada" : "tarragona";
 
       // 1. Create order in Supabase
       const { data: order, error: orderError } = await supabase
