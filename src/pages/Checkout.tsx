@@ -269,7 +269,7 @@ const Checkout = () => {
         }
         return true;
       },
-      { message: "Debes seleccionar en qué local recoges el pedido", path: ["pickupStore"] },
+      { message: t("checkout.pickupStoreRequired"), path: ["pickupStore"] },
     )
     .refine(
       (data) => {
@@ -287,7 +287,7 @@ const Checkout = () => {
         }
         return true;
       },
-      { message: "El portal es obligatorio", path: ["portal"] },
+      { message: t("checkout.portalRequired"), path: ["portal"] },
     );
 
   const [form, setForm] = useState({
@@ -323,7 +323,7 @@ const Checkout = () => {
     }
 
     if (scheduleMode === "scheduled" && !scheduledFor) {
-      toast.error("Selecciona una hora para programar tu pedido");
+      toast.error(t("checkout.selectTimeError"));
       return;
     }
 
@@ -558,7 +558,7 @@ const Checkout = () => {
               <div className="mb-6 bg-card border border-border rounded-xl p-5">
                 <h2 className="font-display text-base font-bold text-foreground mb-4 flex items-center gap-2">
                   <CalendarClock className="w-4 h-4 text-menu-teal" />
-                  ¿Cuándo quieres tu pedido?
+                  {t("checkout.whenTitle")}
                 </h2>
 
                 <div className="grid grid-cols-2 gap-3 mb-4">
@@ -577,9 +577,9 @@ const Checkout = () => {
                   >
                     <Zap className="w-4 h-4 text-menu-teal shrink-0" />
                     <div>
-                      <p className="font-display font-bold text-sm">Lo antes posible</p>
+                      <p className="font-display font-bold text-sm">{t("checkout.asap")}</p>
                       <p className="text-xs text-muted-foreground">
-                        {isCurrentlyOpen ? "Estamos abiertos" : "Cerrado ahora"}
+                        {isCurrentlyOpen ? t("checkout.openNow") : t("checkout.closedNow")}
                       </p>
                     </div>
                   </button>
@@ -605,8 +605,8 @@ const Checkout = () => {
                   >
                     <CalendarClock className="w-4 h-4 text-menu-teal shrink-0" />
                     <div>
-                      <p className="font-display font-bold text-sm">Programar</p>
-                      <p className="text-xs text-muted-foreground">Elige día y hora</p>
+                      <p className="font-display font-bold text-sm">{t("checkout.schedule")}</p>
+                      <p className="text-xs text-muted-foreground">{t("checkout.schedulePick")}</p>
                     </div>
                   </button>
                 </div>
@@ -616,7 +616,7 @@ const Checkout = () => {
                   <div className="space-y-3">
                     {/* Day selector */}
                     <div>
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Día</p>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{t("checkout.day")}</p>
                       <div className="flex gap-2 flex-wrap">
                         {availableDays.map((day, i) => {
                           const isSelected =
@@ -646,9 +646,9 @@ const Checkout = () => {
 
                     {/* Time selector */}
                     <div>
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Hora</p>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{t("checkout.time")}</p>
                       {timeSlots.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">No hay horarios disponibles para este día.</p>
+                        <p className="text-sm text-muted-foreground">{t("checkout.noSlots")}</p>
                       ) : (
                         <div className="flex gap-2 flex-wrap">
                           {timeSlots.map((slot) => (
@@ -719,7 +719,7 @@ const Checkout = () => {
                       type="tel"
                       value={form.phone}
                       onChange={(e) => updateField("phone", e.target.value)}
-                      placeholder="612 345 678"
+                      placeholder={t("checkout.phonePlaceholder")}
                     />
                     {errors.phone && (
                       <p className="text-destructive text-xs mt-1">{errors.phone}</p>
@@ -732,7 +732,7 @@ const Checkout = () => {
                       type="email"
                       value={form.email}
                       onChange={(e) => updateField("email", e.target.value)}
-                      placeholder="tu@email.com"
+                      placeholder={t("checkout.emailPlaceholder")}
                     />
                     {errors.email && (
                       <p className="text-destructive text-xs mt-1">{errors.email}</p>
@@ -799,7 +799,7 @@ const Checkout = () => {
                 {form.orderType === "pickup" && (
                   <div className="mt-4 space-y-3">
                     <p className="text-sm font-display font-semibold text-foreground">
-                      ¿En qué local recoges? *
+                      {t("checkout.pickupStoreQuestion")}
                     </p>
                     <div className="grid sm:grid-cols-2 gap-3">
                       {pickupStores.map((store) => {
@@ -821,7 +821,7 @@ const Checkout = () => {
                         >
                           {closed && (
                             <span className="absolute top-2 right-2 text-[10px] bg-red-100 text-red-700 border border-red-200 rounded-full px-2 py-0.5 font-semibold">
-                              Cerrado hoy
+                              {t("checkout.closedToday")}
                             </span>
                           )}
                           <p className="font-display font-bold text-sm text-foreground mb-1">
@@ -903,12 +903,12 @@ const Checkout = () => {
                       {/* Portal / Escalera / Piso / Puerta */}
                       <div className="sm:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-3">
                         <div>
-                          <Label htmlFor="portal">Portal *</Label>
+                          <Label htmlFor="portal">{t("checkout.portal")} *</Label>
                           <Input
                             id="portal"
                             value={form.portal}
                             onChange={(e) => updateField("portal", e.target.value)}
-                            placeholder="Nº 12"
+                            placeholder={t("checkout.portalPlaceholder")}
                             className={errors.portal ? "border-destructive" : ""}
                           />
                           {errors.portal && (
@@ -916,30 +916,30 @@ const Checkout = () => {
                           )}
                         </div>
                         <div>
-                          <Label htmlFor="staircase">Escalera</Label>
+                          <Label htmlFor="staircase">{t("checkout.staircase")}</Label>
                           <Input
                             id="staircase"
                             value={form.staircase}
                             onChange={(e) => updateField("staircase", e.target.value)}
-                            placeholder="A, B…"
+                            placeholder={t("checkout.staircasePlaceholder")}
                           />
                         </div>
                         <div>
-                          <Label htmlFor="floor">Piso</Label>
+                          <Label htmlFor="floor">{t("checkout.floor")}</Label>
                           <Input
                             id="floor"
                             value={form.floor}
                             onChange={(e) => updateField("floor", e.target.value)}
-                            placeholder="1º, 2º…"
+                            placeholder={t("checkout.floorPlaceholder")}
                           />
                         </div>
                         <div>
-                          <Label htmlFor="door">Puerta</Label>
+                          <Label htmlFor="door">{t("checkout.door")}</Label>
                           <Input
                             id="door"
                             value={form.door}
                             onChange={(e) => updateField("door", e.target.value)}
-                            placeholder="1, 2ª…"
+                            placeholder={t("checkout.doorPlaceholder")}
                           />
                         </div>
                       </div>
@@ -966,12 +966,12 @@ const Checkout = () => {
 
                     {/* Notes for the delivery driver */}
                     <div>
-                      <Label htmlFor="deliveryNotes">Notas para el repartidor</Label>
+                      <Label htmlFor="deliveryNotes">{t("checkout.deliveryNotesLabel")}</Label>
                       <Textarea
                         id="deliveryNotes"
                         value={form.deliveryNotes}
                         onChange={(e) => updateField("deliveryNotes", e.target.value)}
-                        placeholder="Timbre roto, dejar en recepción, etc."
+                        placeholder={t("checkout.deliveryNotesPlaceholder")}
                         maxLength={500}
                         rows={2}
                       />
@@ -1123,7 +1123,7 @@ const Checkout = () => {
                                 </span>
                                 <span className="font-semibold text-foreground">
                                   {extra.price === 0
-                                    ? "Gratis"
+                                    ? t("checkout.free")
                                     : `+${(extra.price * extra.quantity).toFixed(2)} €`}
                                 </span>
                               </li>
