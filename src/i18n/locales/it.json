@@ -194,6 +194,7 @@
     "upsellTitle": "Vuoi aggiungere qualcosa in più?"
   },
   "checkout": {
+    "scheduledConfirmation": "✓ Ordine programmato per {{day}} alle {{time}}",
     "emptyTitle": "Il tuo carrello è vuoto",
     "emptyDesc": "Aggiungi prodotti dal nostro menu per fare il tuo ordine.",
     "viewMenu": "Vedi Menu",
