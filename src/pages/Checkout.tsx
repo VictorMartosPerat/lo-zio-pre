@@ -680,7 +680,15 @@ const Checkout = () => {
           })()}
 
           <div className="grid lg:grid-cols-5 gap-8">
-            <form onSubmit={handleSubmit} className="lg:col-span-3 space-y-8">
+            <form
+              onSubmit={handleSubmit}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.target as HTMLElement).tagName !== "TEXTAREA") {
+                  e.preventDefault();
+                }
+              }}
+              className="lg:col-span-3 space-y-8"
+            >
               {/* Contact */}
               <div className="bg-card rounded-xl p-6 border border-border">
                 <h2 className="font-display text-xl font-bold text-foreground mb-4">
