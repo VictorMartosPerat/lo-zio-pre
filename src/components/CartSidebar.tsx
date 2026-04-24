@@ -100,7 +100,7 @@ const CartSidebar = () => {
       </div>
 
       {/* Scrollable body */}
-      <div className="flex-1 overflow-y-auto min-h-0">
+      <div className="flex-1 min-h-0">
         {/* Food items */}
         <div className="px-4 py-3 space-y-2">
           {foodItems.map((item) => (
