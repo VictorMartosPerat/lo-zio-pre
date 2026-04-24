@@ -323,7 +323,7 @@ const Checkout = () => {
     }
 
     if (scheduleMode === "scheduled" && !scheduledFor) {
-      toast.error("Selecciona una hora para programar tu pedido");
+      toast.error(t("checkout.selectTimeError"));
       return;
     }
 
