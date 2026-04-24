@@ -433,6 +433,45 @@ const Checkout = () => {
     );
   }
 
+  // Stripe payment step — render PaymentElement (Apple Pay, Google Pay, Card, etc.)
+  if (stripeStep) {
+    return (
+      <div className="min-h-screen bg-background pb-20 md:pb-0">
+        <Navbar />
+        <div className="pt-24 md:pt-28 pb-24 px-3 md:px-4">
+          <div className="max-w-2xl mx-auto">
+            <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-2">
+              {t("checkout.payment")}
+            </h1>
+            <p className="text-muted-foreground font-body mb-8">
+              Total: <span className="font-bold text-foreground">{totalPrice.toFixed(2)} €</span>
+            </p>
+
+            <Elements
+              stripe={stripePromise}
+              options={{
+                clientSecret: stripeStep.clientSecret,
+                appearance: { theme: "stripe" },
+              }}
+            >
+              <StripePaymentForm
+                orderId={stripeStep.orderId}
+                totalPrice={totalPrice}
+                customer={{ name: form.name, email: form.email, phone: form.phone }}
+                onBack={() => setStripeStep(null)}
+                onSuccess={() => {
+                  clearCart();
+                  navigate(`/pedido-confirmado?id=${stripeStep.orderId}`);
+                }}
+              />
+            </Elements>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
       <Navbar />
