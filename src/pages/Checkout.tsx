@@ -105,11 +105,20 @@ const StripePaymentForm = ({
     }
 
     if (paymentIntent?.status === "succeeded") {
+      // Read pickup_store to derive assigned pizzeria, then mark paid + assign.
+      const { data: existing } = await supabase
+        .from("orders")
+        .select("pickup_store, assigned_to")
+        .eq("id", orderId)
+        .single();
+      const assignedTo: "tarragona" | "arrabassada" =
+        existing?.pickup_store === "arrabassada" ? "arrabassada" : "tarragona";
       await supabase
         .from("orders")
         .update({
           payment_status: "paid",
           stripe_payment_intent_id: paymentIntent.id,
+          assigned_to: existing?.assigned_to ?? assignedTo,
         })
         .eq("id", orderId);
       onSuccess();
