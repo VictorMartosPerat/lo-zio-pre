@@ -637,7 +637,7 @@ const Checkout = () => {
                                   : "border-border hover:border-menu-teal/40 text-foreground"
                               }`}
                             >
-                              {formatDayLabel(day)}
+                              {formatDayLabel(day, new Date(), lang)}
                             </button>
                           );
                         })}
