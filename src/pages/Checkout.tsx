@@ -287,7 +287,7 @@ const Checkout = () => {
         }
         return true;
       },
-      { message: "El portal es obligatorio", path: ["portal"] },
+      { message: t("checkout.portalRequired"), path: ["portal"] },
     );
 
   const [form, setForm] = useState({
