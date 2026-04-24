@@ -382,6 +382,7 @@ const Checkout = () => {
           delivery_address: form.orderType === "delivery"
             ? [
                 form.address,
+                form.portal ? `Portal ${form.portal}` : null,
                 form.staircase ? `Esc. ${form.staircase}` : null,
                 form.floor ? `Piso ${form.floor}` : null,
                 form.door ? `Puerta ${form.door}` : null,
@@ -391,7 +392,12 @@ const Checkout = () => {
           delivery_postal_code: form.orderType === "delivery" ? form.postalCode : null,
           payment_method: form.paymentMethod,
           payment_status: "pending",
-          notes: form.notes || null,
+          notes: [
+            form.notes,
+            form.orderType === "delivery" && form.deliveryNotes
+              ? `🛵 Repartidor: ${form.deliveryNotes}`
+              : null,
+          ].filter(Boolean).join(" — ") || null,
           total_amount: totalPrice,
           scheduled_for: scheduledFor ? scheduledFor.toISOString() : null,
         })
