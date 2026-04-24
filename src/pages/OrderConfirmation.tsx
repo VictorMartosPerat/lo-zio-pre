@@ -62,15 +62,25 @@ const OrderConfirmation = () => {
 
     const fetchOrder = async () => {
       // If we came back from a Stripe redirect (Apple Pay / Google Pay / 3DS),
-      // mark the order as paid based on the payment_intent in the URL.
+      // mark the order as paid AND assign it to a pizzeria so the kitchen popup
+      // fires only after payment confirmation.
       const paymentIntentId = searchParams.get("payment_intent");
       const redirectStatus = searchParams.get("redirect_status");
       if (paymentIntentId && redirectStatus === "succeeded") {
+        // Read pickup_store to derive the assigned pizzeria
+        const { data: existing } = await supabase
+          .from("orders")
+          .select("pickup_store, assigned_to")
+          .eq("id", orderId)
+          .single();
+        const assignedTo: "tarragona" | "arrabassada" =
+          existing?.pickup_store === "arrabassada" ? "arrabassada" : "tarragona";
         await supabase
           .from("orders")
           .update({
             payment_status: "paid",
             stripe_payment_intent_id: paymentIntentId,
+            assigned_to: existing?.assigned_to ?? assignedTo,
           })
           .eq("id", orderId);
       }
