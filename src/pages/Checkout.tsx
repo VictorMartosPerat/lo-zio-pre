@@ -131,7 +131,7 @@ const StripePaymentForm = ({
             layout: {
               type: "accordion",
               defaultCollapsed: false,
-              radios: false,
+              radios: true,
               spacedAccordionItems: true,
             },
             wallets: { applePay: "auto", googlePay: "auto" },
