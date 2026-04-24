@@ -174,7 +174,8 @@ const Checkout = () => {
   const { items, totalPrice, updateQuantity, removeItem, clearCart } = useCart();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
   // Stripe payment step state
   const [stripeStep, setStripeStep] = useState<{
     orderId: string;
@@ -636,7 +637,7 @@ const Checkout = () => {
                                   : "border-border hover:border-menu-teal/40 text-foreground"
                               }`}
                             >
-                              {formatDayLabel(day)}
+                              {formatDayLabel(day, new Date(), lang)}
                             </button>
                           );
                         })}
@@ -670,7 +671,10 @@ const Checkout = () => {
 
                     {scheduledFor && (
                       <p className="text-xs text-menu-teal font-semibold mt-1">
-                        ✓ Pedido programado para el {formatDayLabel(scheduledDay)} a las {scheduledTime}
+                        {t("checkout.scheduledConfirmation", {
+                          day: formatDayLabel(scheduledDay, new Date(), lang),
+                          time: scheduledTime,
+                        })}
                       </p>
                     )}
                   </div>

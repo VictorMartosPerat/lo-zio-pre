@@ -194,6 +194,7 @@
     "upsellTitle": "Want to add something else?"
   },
   "checkout": {
+    "scheduledConfirmation": "✓ Order scheduled for {{day}} at {{time}}",
     "emptyTitle": "Your cart is empty",
     "emptyDesc": "Add products from our menu to place your order.",
     "viewMenu": "View Menu",

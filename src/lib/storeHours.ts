@@ -88,16 +88,30 @@ export function formatTime(h: number, m: number): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
-/** Format date as "Hoy", "Mañana", or "lun 13 abr" */
-export function formatDayLabel(d: Date, now: Date = new Date()): string {
-  const days  = ["dom","lun","mar","mié","jue","vie","sáb"];
-  const months = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+/** Format date as localized "Today" / "Tomorrow" / "mon 13 apr" */
+export function formatDayLabel(d: Date, now: Date = new Date(), lang: string = "es"): string {
+  const labels: Record<string, { today: string; tomorrow: string; days: string[]; months: string[] }> = {
+    es: { today: "Hoy", tomorrow: "Mañana",
+      days: ["dom","lun","mar","mié","jue","vie","sáb"],
+      months: ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"] },
+    en: { today: "Today", tomorrow: "Tomorrow",
+      days: ["sun","mon","tue","wed","thu","fri","sat"],
+      months: ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"] },
+    ca: { today: "Avui", tomorrow: "Demà",
+      days: ["dg","dl","dt","dc","dj","dv","ds"],
+      months: ["gen","feb","març","abr","maig","juny","jul","ag","set","oct","nov","des"] },
+    it: { today: "Oggi", tomorrow: "Domani",
+      days: ["dom","lun","mar","mer","gio","ven","sab"],
+      months: ["gen","feb","mar","apr","mag","giu","lug","ago","set","ott","nov","dic"] },
+  };
+  const code = (lang || "es").slice(0, 2).toLowerCase();
+  const L = labels[code] ?? labels.es;
   const todayStr    = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
   const tomorrowStr = (() => { const t = new Date(now); t.setDate(t.getDate()+1); return `${t.getFullYear()}-${t.getMonth()}-${t.getDate()}`; })();
   const dStr = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-  if (dStr === todayStr)    return "Hoy";
-  if (dStr === tomorrowStr) return "Mañana";
-  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+  if (dStr === todayStr)    return L.today;
+  if (dStr === tomorrowStr) return L.tomorrow;
+  return `${L.days[d.getDay()]} ${d.getDate()} ${L.months[d.getMonth()]}`;
 }
 
 /**
