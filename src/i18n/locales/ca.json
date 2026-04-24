@@ -495,7 +495,21 @@
     "pendingPayment": "Pagament pendent",
     "contactReminder": "Et enviarem una confirmació a {{email}}",
     "backHome": "Tornar a l'inici",
-    "notFound": "Comanda no trobada"
+    "notFound": "Comanda no trobada",
+    "loggedInTip": "Si vols veure l'estat de la teva comanda en temps real, ves a El meu perfil → Les meves comandes.",
+    "guestTip": "Recorda que com no has iniciat sessió, no pots veure l'estat en directe de la teva comanda. La pròxima vegada no t'oblidis de fer-ho per aconseguir punts i promocions."
+  },
+  "unsubscribe": {
+    "checking": "Comprovant l'enllaç...",
+    "title": "Donar-se de baixa",
+    "description": "Vols deixar de rebre emails de Pizzería Lo Zio?",
+    "confirm": "Confirmar la baixa",
+    "successTitle": "Baixa confirmada",
+    "successDescription": "Ja no rebràs més emails. Pots tornar a subscriure't quan vulguis.",
+    "alreadyTitle": "Ja estàs donat de baixa",
+    "alreadyDescription": "Aquesta adreça ja estava donada de baixa.",
+    "errorTitle": "Enllaç no vàlid",
+    "errorDescription": "L'enllaç ha caducat o no és vàlid. Torna a intentar-ho des d'un email recent."
   },
   "dialog": {
     "addExtras": "Afegeix un extra",
