@@ -4,7 +4,9 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Loader2, Shield, ShieldOff, Search } from "lucide-react";
+import { Loader2, Shield, ShieldOff, Search, Pizza } from "lucide-react";
+
+type AppRole = "admin" | "pizzeriaTarragona" | "pizzeriaArrabassada";
 
 interface UserWithRoles {
   user_id: string;
@@ -14,10 +16,15 @@ interface UserWithRoles {
   roles: string[];
 }
 
+const PIZZERIA_ROLES: { role: AppRole; label: string; short: string }[] = [
+  { role: "pizzeriaTarragona", label: "Pizzería Tarragona", short: "Tarragona" },
+  { role: "pizzeriaArrabassada", label: "Pizzería Arrabassada", short: "Arrabassada" },
+];
+
 const AdminUserRoles = () => {
   const [users, setUsers] = useState<UserWithRoles[]>([]);
   const [loading, setLoading] = useState(true);
-  const [busyId, setBusyId] = useState<string | null>(null);
+  const [busyKey, setBusyKey] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
   const load = async () => {
@@ -36,31 +43,31 @@ const AdminUserRoles = () => {
     load();
   }, []);
 
-  const grantAdmin = async (userId: string) => {
-    setBusyId(userId);
-    const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: "admin" });
-    setBusyId(null);
+  const grantRole = async (userId: string, role: AppRole) => {
+    setBusyKey(userId + role);
+    const { error } = await supabase.from("user_roles").insert({ user_id: userId, role });
+    setBusyKey(null);
     if (error) {
       toast.error("Error: " + error.message);
       return;
     }
-    toast.success("Rol admin concedido");
+    toast.success(`Rol ${role} concedido`);
     load();
   };
 
-  const revokeAdmin = async (userId: string) => {
-    setBusyId(userId);
+  const revokeRole = async (userId: string, role: AppRole) => {
+    setBusyKey(userId + role);
     const { error } = await supabase
       .from("user_roles")
       .delete()
       .eq("user_id", userId)
-      .eq("role", "admin");
-    setBusyId(null);
+      .eq("role", role);
+    setBusyKey(null);
     if (error) {
       toast.error("Error: " + error.message);
       return;
     }
-    toast.success("Rol admin revocado");
+    toast.success(`Rol ${role} revocado`);
     load();
   };
 
@@ -100,60 +107,95 @@ const AdminUserRoles = () => {
       <div className="space-y-2">
         {filtered.map((u) => {
           const isAdmin = u.roles.includes("admin");
-          const isBusy = busyId === u.user_id;
+          const adminBusy = busyKey === u.user_id + "admin";
           return (
             <div
               key={u.user_id}
-              className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-lg border border-border bg-card"
+              className="flex flex-col gap-3 p-4 rounded-lg border border-border bg-card"
             >
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-body font-semibold text-foreground truncate">
-                    {u.full_name || u.email}
-                  </span>
-                  {isAdmin && (
-                    <Badge variant="default" className="bg-primary/15 text-primary hover:bg-primary/20">
-                      <Shield className="w-3 h-3 mr-1" /> Admin
-                    </Badge>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-body font-semibold text-foreground truncate">
+                      {u.full_name || u.email}
+                    </span>
+                    {isAdmin && (
+                      <Badge variant="default" className="bg-primary/15 text-primary hover:bg-primary/20">
+                        <Shield className="w-3 h-3 mr-1" /> Admin
+                      </Badge>
+                    )}
+                    {PIZZERIA_ROLES.map(({ role, short }) =>
+                      u.roles.includes(role) ? (
+                        <Badge key={role} variant="secondary" className="bg-accent/40 text-foreground">
+                          <Pizza className="w-3 h-3 mr-1" /> {short}
+                        </Badge>
+                      ) : null
+                    )}
+                  </div>
+                  {u.full_name && (
+                    <p className="text-xs text-muted-foreground font-body truncate">{u.email}</p>
                   )}
                 </div>
-                {u.full_name && (
-                  <p className="text-xs text-muted-foreground font-body truncate">{u.email}</p>
+
+                {isAdmin ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={adminBusy}
+                    onClick={() => revokeRole(u.user_id, "admin")}
+                    className="font-body"
+                  >
+                    {adminBusy ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <ShieldOff className="w-4 h-4 mr-1" /> Quitar admin
+                      </>
+                    )}
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    disabled={adminBusy}
+                    onClick={() => grantRole(u.user_id, "admin")}
+                    className="font-body"
+                  >
+                    {adminBusy ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Shield className="w-4 h-4 mr-1" /> Hacer admin
+                      </>
+                    )}
+                  </Button>
                 )}
               </div>
 
-              {isAdmin ? (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={isBusy}
-                  onClick={() => revokeAdmin(u.user_id)}
-                  className="font-body"
-                >
-                  {isBusy ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <>
-                      <ShieldOff className="w-4 h-4 mr-1" /> Quitar admin
-                    </>
-                  )}
-                </Button>
-              ) : (
-                <Button
-                  size="sm"
-                  disabled={isBusy}
-                  onClick={() => grantAdmin(u.user_id)}
-                  className="font-body"
-                >
-                  {isBusy ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <>
-                      <Shield className="w-4 h-4 mr-1" /> Hacer admin
-                    </>
-                  )}
-                </Button>
-              )}
+              <div className="flex flex-wrap gap-2 pt-2 border-t border-border">
+                {PIZZERIA_ROLES.map(({ role, label }) => {
+                  const has = u.roles.includes(role);
+                  const busy = busyKey === u.user_id + role;
+                  return (
+                    <Button
+                      key={role}
+                      size="sm"
+                      variant={has ? "outline" : "secondary"}
+                      disabled={busy}
+                      onClick={() => (has ? revokeRole(u.user_id, role) : grantRole(u.user_id, role))}
+                      className="font-body"
+                    >
+                      {busy ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>
+                          <Pizza className="w-4 h-4 mr-1" />
+                          {has ? `Quitar ${label}` : `Asignar ${label}`}
+                        </>
+                      )}
+                    </Button>
+                  );
+                })}
+              </div>
             </div>
           );
         })}
