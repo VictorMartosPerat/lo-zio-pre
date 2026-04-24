@@ -434,6 +434,9 @@ const Admin = () => {
                 <DropdownMenuItem onClick={() => setActiveTab("customers")}>
                   <Users className="w-4 h-4 mr-2" /> Clientes
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab("roles")}>
+                  <ShieldCheck className="w-4 h-4 mr-2" /> Roles de usuario
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel>Análisis</DropdownMenuLabel>
                 <DropdownMenuSeparator />
