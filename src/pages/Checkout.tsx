@@ -128,8 +128,12 @@ const StripePaymentForm = ({
         </h2>
         <PaymentElement
           options={{
-            layout: "tabs",
+            layout: {
+              type: "accordion",
+              defaultCollapsed: false,
+            },
             wallets: { applePay: "auto", googlePay: "auto" },
+            paymentMethodOrder: ["apple_pay", "google_pay", "amazon_pay", "card"],
           }}
         />
         {errorMsg && (
