@@ -218,27 +218,39 @@ const Checkout = () => {
 
   // Pre-fill contact info and address from user profile — wait for auth to finish loading
   useEffect(() => {
-    if (authLoading || !user) return;
+    if (authLoading) return;
+
+    if (!user) {
+      setProfileAddress(null);
+      return;
+    }
+
     const loadProfile = async () => {
       const { data } = await supabase
         .from("profiles")
         .select("full_name, phone, address, city, postal_code")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
+
       setForm((prev) => ({
         ...prev,
-        name: data?.full_name ?? prev.name,
-        phone: data?.phone ?? prev.phone,
-        email: user.email ?? prev.email,
+        name: data?.full_name || prev.name,
+        phone: data?.phone || prev.phone,
+        email: user.email || prev.email,
       }));
-      if (data?.address) {
+
+      if (data?.address || data?.city || data?.postal_code) {
         setProfileAddress({
-          address: data.address ?? "",
-          city: data.city ?? "",
-          postalCode: data.postal_code ?? "",
+          address: data?.address || "",
+          city: data?.city || "",
+          postalCode: data?.postal_code || "",
         });
+        return;
       }
+
+      setProfileAddress(null);
     };
+
     loadProfile();
   }, [user, authLoading]);
 
