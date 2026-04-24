@@ -1,6 +1,6 @@
 const TestEnvBanner = () => {
   return (
-    <div className="w-full bg-destructive text-destructive-foreground px-4 py-2 text-center text-sm font-body flex flex-col sm:flex-row items-center justify-center gap-2 z-50">
+    <div className="fixed top-0 left-0 right-0 z-[60] w-full bg-destructive text-destructive-foreground px-4 py-2 text-center text-xs sm:text-sm font-body flex flex-col sm:flex-row items-center justify-center gap-2 shadow-md">
       <span>⚠️ Esto es un entorno de pruebas, por favor redirígete a</span>
       <a
         href="https://pizzeriaslozio.com"
