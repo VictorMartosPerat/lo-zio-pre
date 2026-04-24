@@ -51,6 +51,7 @@ import {
   ArrowRight,
   XCircle,
   PhoneCall,
+  CalendarClock,
 } from "lucide-react";
 
 interface OrderItem {
@@ -78,6 +79,7 @@ interface Order {
   notes: string | null;
   total_amount: number;
   created_at: string;
+  scheduled_for: string | null;
   order_items: OrderItem[];
 }
 
@@ -436,12 +438,24 @@ const OrderCard = ({
             >
               {PAYMENT_STATUS_LABELS[order.payment_status]}
             </Badge>
+            {order.scheduled_for && (
+              <Badge className="text-[10px] border bg-purple-100 text-purple-800 border-purple-200 gap-1">
+                <CalendarClock className="w-3 h-3" />
+                Programado
+              </Badge>
+            )}
           </div>
           <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               <Clock className="w-3 h-3" />
               {format(new Date(order.created_at), "HH:mm")}
             </span>
+            {order.scheduled_for && (
+              <span className="flex items-center gap-1 font-semibold text-purple-700">
+                <CalendarClock className="w-3 h-3" />
+                Para {format(new Date(order.scheduled_for), "d MMM 'a las' HH:mm", { locale: es })}
+              </span>
+            )}
             <span className="flex items-center gap-1">
               {order.order_type === "delivery" ? (
                 <><Truck className="w-3 h-3" /> Reparto</>
