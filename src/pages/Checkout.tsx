@@ -671,7 +671,10 @@ const Checkout = () => {
 
                     {scheduledFor && (
                       <p className="text-xs text-menu-teal font-semibold mt-1">
-                        ✓ Pedido programado para el {formatDayLabel(scheduledDay)} a las {scheduledTime}
+                        {t("checkout.scheduledConfirmation", {
+                          day: formatDayLabel(scheduledDay, new Date(), lang),
+                          time: scheduledTime,
+                        })}
                       </p>
                     )}
                   </div>
