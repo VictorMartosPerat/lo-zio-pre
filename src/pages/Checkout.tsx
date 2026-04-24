@@ -884,8 +884,21 @@ const Checkout = () => {
                         />
                       </div>
 
-                      {/* Escalera / Piso / Puerta */}
-                      <div className="sm:col-span-2 grid grid-cols-3 gap-3">
+                      {/* Portal / Escalera / Piso / Puerta */}
+                      <div className="sm:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div>
+                          <Label htmlFor="portal">Portal *</Label>
+                          <Input
+                            id="portal"
+                            value={form.portal}
+                            onChange={(e) => updateField("portal", e.target.value)}
+                            placeholder="Nº 12"
+                            className={errors.portal ? "border-destructive" : ""}
+                          />
+                          {errors.portal && (
+                            <p className="text-destructive text-xs mt-1">{errors.portal}</p>
+                          )}
+                        </div>
                         <div>
                           <Label htmlFor="staircase">Escalera</Label>
                           <Input
