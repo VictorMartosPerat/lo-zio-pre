@@ -583,7 +583,7 @@ const MenuSection = () => {
 
             {/* Right: cart sidebar (desktop only, when cart has items) */}
             {totalItems > 0 && (
-              <div className="hidden lg:block lg:sticky lg:top-32" style={{ marginTop: "calc(2.25rem + 1.5rem)" }}>
+              <div className="hidden lg:block" style={{ marginTop: "calc(2.25rem + 1.5rem)" }}>
                 <CartSidebar />
               </div>
             )}
