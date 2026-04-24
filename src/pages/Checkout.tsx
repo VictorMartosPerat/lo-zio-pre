@@ -329,6 +329,32 @@ const Checkout = () => {
         fieldErrors[err.path[0] as string] = err.message;
       });
       setErrors(fieldErrors);
+
+      // Scroll to the first field with an error
+      const fieldOrder = [
+        "name",
+        "phone",
+        "email",
+        "pickupStore",
+        "address",
+        "portal",
+        "city",
+        "postalCode",
+      ];
+      const firstErrorField = fieldOrder.find((f) => fieldErrors[f]);
+      if (firstErrorField) {
+        setTimeout(() => {
+          const el =
+            document.getElementById(firstErrorField) ||
+            document.querySelector(`[data-field="${firstErrorField}"]`);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            if ("focus" in el && typeof (el as HTMLElement).focus === "function") {
+              (el as HTMLElement).focus({ preventScroll: true });
+            }
+          }
+        }, 50);
+      }
       return;
     }
 
