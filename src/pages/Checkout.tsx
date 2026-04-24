@@ -400,6 +400,7 @@ const Checkout = () => {
           guest_phone: form.phone,
           order_type: form.orderType,
           pickup_store: assignedStore,
+          assigned_to: assignedTo,
           delivery_address: form.orderType === "delivery"
             ? [
                 form.address,
