@@ -384,18 +384,8 @@ const Checkout = () => {
       const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
       if (itemsError) throw itemsError;
 
-      // 3. Stripe payment if selected
+      // 3. Stripe payment if selected — create PaymentIntent and switch to payment step
       if (form.paymentMethod === "stripe") {
-        if (!stripe || !elements) {
-          throw new Error(t("checkout.stripeNotLoaded"));
-        }
-
-        const cardElement = elements.getElement(CardElement);
-        if (!cardElement) {
-          throw new Error(t("checkout.stripeNotLoaded"));
-        }
-
-        // Get PaymentIntent clientSecret from Edge Function
         const { data: fnData, error: fnError } = await supabase.functions.invoke(
           "create-payment-intent",
           { body: { orderId: order.id } },
@@ -405,40 +395,12 @@ const Checkout = () => {
           throw new Error(fnError?.message || t("checkout.stripeError"));
         }
 
-        // Confirm card payment
-        const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
-          fnData.clientSecret,
-          {
-            payment_method: {
-              card: cardElement,
-              billing_details: {
-                name: form.name,
-                email: form.email,
-                phone: form.phone,
-              },
-            },
-          },
-        );
-
-        if (stripeError) {
-          await supabase
-            .from("orders")
-            .update({ payment_status: "failed" })
-            .eq("id", order.id);
-          throw new Error(stripeError.message || t("checkout.stripeError"));
-        }
-
-        if (paymentIntent?.status === "succeeded") {
-          await supabase
-            .from("orders")
-            .update({
-              payment_status: "paid",
-              stripe_payment_intent_id: paymentIntent.id,
-            })
-            .eq("id", order.id);
-        }
+        setStripeStep({ orderId: order.id, clientSecret: fnData.clientSecret });
+        setLoading(false);
+        return;
       }
 
+      // Cash flow — order is complete, redirect immediately
       clearCart();
       navigate(`/pedido-confirmado?id=${order.id}`);
     } catch (err) {
