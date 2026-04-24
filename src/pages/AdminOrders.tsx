@@ -78,6 +78,7 @@ interface Order {
   notes: string | null;
   total_amount: number;
   created_at: string;
+  scheduled_for: string | null;
   order_items: OrderItem[];
 }
 
