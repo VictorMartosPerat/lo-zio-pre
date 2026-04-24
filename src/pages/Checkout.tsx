@@ -799,7 +799,7 @@ const Checkout = () => {
                 {form.orderType === "pickup" && (
                   <div className="mt-4 space-y-3">
                     <p className="text-sm font-display font-semibold text-foreground">
-                      ¿En qué local recoges? *
+                      {t("checkout.pickupStoreQuestion")}
                     </p>
                     <div className="grid sm:grid-cols-2 gap-3">
                       {pickupStores.map((store) => {
