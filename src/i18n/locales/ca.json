@@ -194,6 +194,7 @@
     "upsellTitle": "Vols afegir alguna cosa més?"
   },
   "checkout": {
+    "scheduledConfirmation": "✓ Comanda programada per al {{day}} a les {{time}}",
     "emptyTitle": "El teu carret està buit",
     "emptyDesc": "Afegeix productes des del nostre menú per fer la teva comanda.",
     "viewMenu": "Veure Menú",
