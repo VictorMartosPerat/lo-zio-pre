@@ -821,7 +821,7 @@ const Checkout = () => {
                         >
                           {closed && (
                             <span className="absolute top-2 right-2 text-[10px] bg-red-100 text-red-700 border border-red-200 rounded-full px-2 py-0.5 font-semibold">
-                              Cerrado hoy
+                              {t("checkout.closedToday")}
                             </span>
                           )}
                           <p className="font-display font-bold text-sm text-foreground mb-1">
