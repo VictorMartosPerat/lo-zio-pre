@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { toast } from "sonner";
-import { CalendarIcon, ChevronDown, ChevronUp, Pencil, Settings, BarChart3, Star, Users, Image as ImageIcon, Package, MapPin, ArrowRight } from "lucide-react";
+import { CalendarIcon, ChevronDown, ChevronUp, Pencil, Settings, BarChart3, Star, Users, Image as ImageIcon, Package, MapPin, ArrowRight, ShieldCheck } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -24,6 +24,7 @@ import AdminReports from "@/components/AdminReports";
 import AdminReviews from "@/components/AdminReviews";
 import AdminMedia from "@/components/AdminMedia";
 import AdminProducts from "@/components/AdminProducts";
+import AdminUserRoles from "@/components/AdminUserRoles";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
@@ -433,6 +434,9 @@ const Admin = () => {
                 <DropdownMenuItem onClick={() => setActiveTab("customers")}>
                   <Users className="w-4 h-4 mr-2" /> Clientes
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab("roles")}>
+                  <ShieldCheck className="w-4 h-4 mr-2" /> Roles de usuario
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel>Análisis</DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -640,6 +644,7 @@ const Admin = () => {
           <TabsContent value="customers"><AdminCustomers /></TabsContent>
           <TabsContent value="media"><AdminMedia /></TabsContent>
           <TabsContent value="products"><AdminProducts /></TabsContent>
+          <TabsContent value="roles"><AdminUserRoles /></TabsContent>
         </Tabs>
       </div>
       <AlertDialog open={showToggleDialog} onOpenChange={setShowToggleDialog}>
