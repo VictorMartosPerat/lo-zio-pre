@@ -44,6 +44,7 @@ interface OrderItem {
 const OrderConfirmation = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const orderId = searchParams.get("id");
 
