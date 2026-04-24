@@ -732,7 +732,7 @@ const Checkout = () => {
                       type="email"
                       value={form.email}
                       onChange={(e) => updateField("email", e.target.value)}
-                      placeholder="tu@email.com"
+                      placeholder={t("checkout.emailPlaceholder")}
                     />
                     {errors.email && (
                       <p className="text-destructive text-xs mt-1">{errors.email}</p>
