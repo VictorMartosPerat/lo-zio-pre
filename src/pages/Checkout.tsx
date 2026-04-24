@@ -174,7 +174,8 @@ const Checkout = () => {
   const { items, totalPrice, updateQuantity, removeItem, clearCart } = useCart();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
   // Stripe payment step state
   const [stripeStep, setStripeStep] = useState<{
     orderId: string;
