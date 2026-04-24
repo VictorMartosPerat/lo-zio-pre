@@ -68,7 +68,7 @@ const App = () => (
               <Route path="/mis-reservas" element={<MyReservations />} />
               <Route path="/perfil" element={<Profile />} />
               <Route path="/admin" element={<Admin />} />
-              <Route path="/pedido" element={<Elements stripe={stripePromise}><Checkout /></Elements>} />
+              <Route path="/pedido" element={<Checkout />} />
               <Route path="/pedido-confirmado" element={<OrderConfirmation />} />
               <Route path="/locales" element={<Locales />} />
               <Route path="/locales/:slug" element={<LocationDetail />} />
