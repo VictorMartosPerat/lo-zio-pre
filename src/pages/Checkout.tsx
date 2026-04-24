@@ -719,7 +719,7 @@ const Checkout = () => {
                       type="tel"
                       value={form.phone}
                       onChange={(e) => updateField("phone", e.target.value)}
-                      placeholder="612 345 678"
+                      placeholder={t("checkout.phonePlaceholder")}
                     />
                     {errors.phone && (
                       <p className="text-destructive text-xs mt-1">{errors.phone}</p>
