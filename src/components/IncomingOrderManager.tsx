@@ -30,6 +30,7 @@ interface IncomingOrder {
   notes: string | null;
   assigned_to: string | null;
   transferred_from: string | null;
+  payment_status?: string | null;
 }
 
 interface OrderItem {
@@ -54,7 +55,10 @@ const STORE_LABELS: Record<PizzeriaSlug, string> = {
 const TIME_MIN = 15;
 const TIME_MAX = 90;
 const TIME_STEP = 15;
-const TIME_DEFAULT = 45;
+const TIME_DEFAULT_PICKUP = 15;
+const TIME_DEFAULT_DELIVERY = 45;
+const defaultTimeFor = (orderType?: string) =>
+  orderType === "delivery" ? TIME_DEFAULT_DELIVERY : TIME_DEFAULT_PICKUP;
 
 const IncomingOrderManager = () => {
   const { t, i18n } = useTranslation();
@@ -63,7 +67,7 @@ const IncomingOrderManager = () => {
 
   const [queue, setQueue] = useState<IncomingOrder[]>([]);
   const [items, setItems] = useState<OrderItem[]>([]);
-  const [estimatedTime, setEstimatedTime] = useState(TIME_DEFAULT);
+  const [estimatedTime, setEstimatedTime] = useState(TIME_DEFAULT_PICKUP);
   const [busy, setBusy] = useState(false);
   const [showRejectConfirm, setShowRejectConfirm] = useState(false);
 
@@ -136,7 +140,7 @@ const IncomingOrderManager = () => {
       stopAlarm();
       return;
     }
-    setEstimatedTime(TIME_DEFAULT);
+    setEstimatedTime(defaultTimeFor(current.order_type));
     setItems([]);
     startAlarm();
 
@@ -159,6 +163,41 @@ const IncomingOrderManager = () => {
     setQueue((q) => q.slice(1));
   }, [stopAlarm]);
 
+  const sendStatusEmail = async (
+    order: IncomingOrder,
+    status: "confirmed" | "cancelled",
+    extras: { estimatedMinutes?: number; rejectionReason?: string } = {},
+  ) => {
+    try {
+      const minutes = extras.estimatedMinutes ?? 45;
+      let readyTime: string | undefined;
+      if (status === "confirmed") {
+        const ready = new Date(Date.now() + minutes * 60_000);
+        readyTime = `${String(ready.getHours()).padStart(2, "0")}:${String(ready.getMinutes()).padStart(2, "0")}`;
+      }
+      await supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "order-status-update",
+          recipientEmail: order.guest_email,
+          idempotencyKey: `order-status-${order.id}-${status}`,
+          templateData: {
+            guestName: order.guest_name,
+            shortId: String(order.id).slice(0, 8).toUpperCase(),
+            totalAmount: Number(order.total_amount) || 0,
+            status,
+            estimatedMinutes: minutes,
+            readyTime,
+            rejectionReason: extras.rejectionReason,
+            pickupStore: order.pickup_store ?? null,
+            refunded: status === "cancelled" && order.payment_status === "refunded",
+          },
+        },
+      });
+    } catch (e) {
+      console.error("send-transactional-email failed", e);
+    }
+  };
+
   const handleAccept = async () => {
     if (!current) return;
     setBusy(true);
@@ -172,6 +211,7 @@ const IncomingOrderManager = () => {
         })
         .eq("id", current.id);
       if (error) throw error;
+      void sendStatusEmail(current, "confirmed", { estimatedMinutes: estimatedTime });
       dequeue();
     } catch (e) {
       toast.error(t("incomingOrder.actionError"));
@@ -205,16 +245,18 @@ const IncomingOrderManager = () => {
 
   const handleReject = async () => {
     if (!current || !pizzeria) return;
+    const rejectionReason = t("incomingOrder.customerRejectedMessage", { phone: STORE_PHONES[pizzeria] });
     setBusy(true);
     try {
       const { error } = await supabase
         .from("orders")
         .update({
           status: "cancelled",
-          rejection_reason: t("incomingOrder.customerRejectedMessage", { phone: STORE_PHONES[pizzeria] }),
+          rejection_reason: rejectionReason,
         })
         .eq("id", current.id);
       if (error) throw error;
+      void sendStatusEmail(current, "cancelled", { rejectionReason });
       setShowRejectConfirm(false);
       dequeue();
     } catch (e) {
