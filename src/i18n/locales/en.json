@@ -495,7 +495,21 @@
     "pendingPayment": "Payment pending",
     "contactReminder": "We will send a confirmation to {{email}}",
     "backHome": "Back to home",
-    "notFound": "Order not found"
+    "notFound": "Order not found",
+    "loggedInTip": "Want to follow your order in real time? Go to My profile → My orders.",
+    "guestTip": "Heads up: since you didn't sign in, you can't track your order live. Next time, log in to earn points and unlock promotions."
+  },
+  "unsubscribe": {
+    "checking": "Checking link...",
+    "title": "Unsubscribe",
+    "description": "Do you want to stop receiving emails from Pizzería Lo Zio?",
+    "confirm": "Confirm unsubscribe",
+    "successTitle": "You've been unsubscribed",
+    "successDescription": "You won't receive any more emails. You can subscribe again whenever you want.",
+    "alreadyTitle": "Already unsubscribed",
+    "alreadyDescription": "This email address was already unsubscribed.",
+    "errorTitle": "Invalid link",
+    "errorDescription": "This link has expired or is invalid. Please try again from a recent email."
   },
   "dialog": {
     "addExtras": "Add an extra",
