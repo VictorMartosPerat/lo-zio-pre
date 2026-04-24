@@ -508,5 +508,30 @@
     "tiramisuDesc": "Casolà · artesanal",
     "addExtrasCustom": "Tria els teus ingredients",
     "freeCounter": "{{count}}/{{max}} inclosos · els següents tenen cost"
+  },
+  "incomingOrder": {
+    "title": "Nova comanda!",
+    "transferredBanner": "⚠️ Comanda transferida des de {{from}}",
+    "customer": "Client",
+    "phone": "Telèfon",
+    "items": "Articles",
+    "delivery": "Entrega",
+    "pickup": "Recollida al local",
+    "address": "Adreça",
+    "total": "Total",
+    "estimatedTime": "Temps estimat",
+    "minutes": "min",
+    "accept": "Acceptar — {{minutes}} min",
+    "transferToTarragona": "Transferir a Tarragona",
+    "transferToArrabassada": "Transferir a Arrabassada",
+    "reject": "Rebutjar",
+    "confirmRejectTitle": "Segur que vols rebutjar aquesta comanda?",
+    "confirmRejectDesc": "El client rebrà una notificació. Aquesta acció no es pot desfer.",
+    "cancel": "Cancel·lar",
+    "confirmReject": "Sí, rebutjar",
+    "actionError": "No s'ha pogut completar l'acció",
+    "queueBadge": "+{{count}} en cua",
+    "customerAcceptedMessage": "La teva comanda ha estat acceptada! Temps estimat: {{minutes}} minuts. Hora estimada: {{time}}.",
+    "customerRejectedMessage": "Ens sap greu, ara mateix no podem acceptar la teva comanda. Truca'ns al {{phone}} o torna-ho a provar."
   }
 }
