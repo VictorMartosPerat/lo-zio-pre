@@ -616,7 +616,7 @@ const Checkout = () => {
                   <div className="space-y-3">
                     {/* Day selector */}
                     <div>
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Día</p>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{t("checkout.day")}</p>
                       <div className="flex gap-2 flex-wrap">
                         {availableDays.map((day, i) => {
                           const isSelected =
