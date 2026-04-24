@@ -947,6 +947,19 @@ const Checkout = () => {
                         />
                       </div>
                     </div>
+
+                    {/* Notes for the delivery driver */}
+                    <div>
+                      <Label htmlFor="deliveryNotes">Notas para el repartidor</Label>
+                      <Textarea
+                        id="deliveryNotes"
+                        value={form.deliveryNotes}
+                        onChange={(e) => updateField("deliveryNotes", e.target.value)}
+                        placeholder="Timbre roto, dejar en recepción, etc."
+                        maxLength={500}
+                        rows={2}
+                      />
+                    </div>
                   </div>
                 )}
               </div>
