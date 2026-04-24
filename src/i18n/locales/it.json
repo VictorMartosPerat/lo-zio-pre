@@ -495,7 +495,21 @@
     "pendingPayment": "Pagamento in sospeso",
     "contactReminder": "Ti invieremo una conferma a {{email}}",
     "backHome": "Torna alla home",
-    "notFound": "Ordine non trovato"
+    "notFound": "Ordine non trovato",
+    "loggedInTip": "Vuoi seguire il tuo ordine in tempo reale? Vai a Il mio profilo → I miei ordini.",
+    "guestTip": "Ricorda: non avendo effettuato l'accesso, non puoi seguire il tuo ordine in tempo reale. La prossima volta accedi per accumulare punti e sbloccare promozioni."
+  },
+  "unsubscribe": {
+    "checking": "Verifica del link...",
+    "title": "Annulla iscrizione",
+    "description": "Vuoi smettere di ricevere email da Pizzería Lo Zio?",
+    "confirm": "Conferma annullamento",
+    "successTitle": "Iscrizione annullata",
+    "successDescription": "Non riceverai più email. Puoi iscriverti di nuovo quando vuoi.",
+    "alreadyTitle": "Già annullato",
+    "alreadyDescription": "Questo indirizzo era già stato annullato in precedenza.",
+    "errorTitle": "Link non valido",
+    "errorDescription": "Il link è scaduto o non è valido. Riprova da un'email recente."
   },
   "dialog": {
     "addExtras": "Aggiungi un extra",

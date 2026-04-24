@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,8 @@ import {
   Banknote,
   Home,
   Loader2,
+  User,
+  Info,
 } from "lucide-react";
 
 interface Order {
@@ -41,6 +44,7 @@ interface OrderItem {
 const OrderConfirmation = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const orderId = searchParams.get("id");
 
@@ -147,6 +151,29 @@ const OrderConfirmation = () => {
             </p>
           </div>
 
+          {/* Logged-in / guest banner */}
+          {user ? (
+            <Link
+              to="/mis-pedidos"
+              className="flex items-start gap-3 bg-menu-teal/5 border border-menu-teal/20 rounded-xl p-4 mb-6 hover:bg-menu-teal/10 transition-colors"
+            >
+              <div className="bg-menu-teal/10 rounded-full p-2 shrink-0">
+                <User className="w-4 h-4 text-menu-teal" />
+              </div>
+              <p className="text-sm text-foreground font-body leading-snug">
+                {t("confirmation.loggedInTip")}
+              </p>
+            </Link>
+          ) : (
+            <div className="flex items-start gap-3 bg-amber-500/5 border border-amber-500/20 rounded-xl p-4 mb-6">
+              <div className="bg-amber-500/10 rounded-full p-2 shrink-0">
+                <Info className="w-4 h-4 text-amber-600" />
+              </div>
+              <p className="text-sm text-foreground font-body leading-snug">
+                {t("confirmation.guestTip")}
+              </p>
+            </div>
+          )}
           {/* Estimated time */}
           <div className="bg-menu-teal/5 border border-menu-teal/20 rounded-xl p-5 mb-6 flex items-center gap-4">
             <div className="bg-menu-teal/10 rounded-full p-3 shrink-0">

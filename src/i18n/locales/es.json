@@ -514,7 +514,21 @@
     "pendingPayment": "Pago pendiente",
     "contactReminder": "Te enviaremos una confirmación a {{email}}",
     "backHome": "Volver al inicio",
-    "notFound": "Pedido no encontrado"
+    "notFound": "Pedido no encontrado",
+    "loggedInTip": "Si quieres ver el estado de tu pedido en tiempo real, ve a Mi perfil → Mis pedidos.",
+    "guestTip": "Recuerda que como no has iniciado sesión, no puedes ver el estado en directo de tu pedido. La próxima vez no te olvides de hacerlo para conseguir puntos y promociones."
+  },
+  "unsubscribe": {
+    "checking": "Comprobando enlace...",
+    "title": "Darse de baja",
+    "description": "¿Quieres dejar de recibir emails de Pizzería Lo Zio?",
+    "confirm": "Confirmar baja",
+    "successTitle": "Baja confirmada",
+    "successDescription": "Ya no recibirás más emails. Puedes volver a suscribirte cuando quieras.",
+    "alreadyTitle": "Ya estás dado de baja",
+    "alreadyDescription": "Esta dirección ya estaba dada de baja anteriormente.",
+    "errorTitle": "Enlace no válido",
+    "errorDescription": "El enlace ha expirado o no es válido. Vuelve a intentarlo desde un email reciente."
   },
   "dialog": {
     "addExtras": "Añade un extra",
