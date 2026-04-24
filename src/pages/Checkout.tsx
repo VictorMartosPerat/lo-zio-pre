@@ -294,11 +294,13 @@ const Checkout = () => {
     address: "",
     city: "",
     postalCode: "",
+    portal: "",
     staircase: "",
     floor: "",
     door: "",
     paymentMethod: "cash" as "cash" | "stripe",
     notes: "",
+    deliveryNotes: "",
   });
 
   const updateField = (field: string, value: string) => {
