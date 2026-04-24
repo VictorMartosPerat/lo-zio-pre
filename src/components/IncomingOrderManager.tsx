@@ -30,6 +30,7 @@ interface IncomingOrder {
   notes: string | null;
   assigned_to: string | null;
   transferred_from: string | null;
+  payment_status?: string | null;
 }
 
 interface OrderItem {
