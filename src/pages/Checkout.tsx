@@ -451,30 +451,9 @@ const Checkout = () => {
       const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
       if (itemsError) throw itemsError;
 
-      // Send "order received" email (non-blocking)
-      supabase.functions
-        .invoke("send-transactional-email", {
-          body: {
-            templateName: "order-received",
-            recipientEmail: form.email,
-            idempotencyKey: `order-received-${order.id}`,
-            templateData: {
-              guestName: form.name,
-              shortId: String(order.id).slice(0, 8).toUpperCase(),
-              totalAmount: totalPrice,
-              orderType: form.orderType,
-              pickupStore: assignedStore,
-              deliveryAddress:
-                form.orderType === "delivery"
-                  ? [form.address, form.city].filter(Boolean).join(", ")
-                  : null,
-              paymentMethod: form.paymentMethod === "stripe" ? "card" : "cash",
-              paymentStatus: "pending",
-              estimatedMinutes: form.orderType === "delivery" ? 30 : 20,
-            },
-          },
-        })
-        .catch((e) => console.error("order-received email failed", e));
+      // NOTE: No email is sent on order creation.
+      // Customer emails are sent only when the order is confirmed or cancelled,
+      // via the notify-order-status edge function (triggered by status change).
 
       // 3. Stripe payment if selected — create PaymentIntent and switch to payment step
       if (form.paymentMethod === "stripe") {
