@@ -61,20 +61,26 @@ serve(async (req) => {
       throw new Error("El número de comensales debe ser entre 1 y 10 para reservas online.");
     }
 
-    // Find available tables using the multi-table DB function
-    const { data: tableIds, error: rpcError } = await supabase.rpc("find_available_tables_multi", {
+    // Atomic table lookup + reservation insert under an advisory lock,
+    // serializing concurrent reservations for the same (location, date) and
+    // preventing the double-booking race condition (M-02).
+    const { data: result, error: rpcError } = await supabase.rpc("atomic_assign_and_reserve", {
       _location: location,
       _date: reservation_date,
       _time: reservation_time,
       _guests: guestsNum,
+      _guest_name: guest_name,
+      _phone: phone,
+      _notes: notes ?? null,
+      _user_id: verifiedUserId,
     });
 
     if (rpcError) {
-      console.error("RPC error:", rpcError);
-      throw new Error("Error checking table availability");
+      console.error("atomic_assign_and_reserve error:", rpcError);
+      throw new Error("Error creating reservation");
     }
 
-    if (!tableIds || tableIds.length === 0) {
+    if (!result?.success) {
       return new Response(
         JSON.stringify({
           success: false,
@@ -86,40 +92,13 @@ serve(async (req) => {
       );
     }
 
-    // Get table names for the confirmation message
-    const { data: tablesData } = await supabase.from("tables").select("id, name").in("id", tableIds);
-    const tableNames = tablesData?.map((t) => t.name).join(" + ") || "asignada";
-
-    // Create a single reservation with all assigned tables
-    const reservationInsert = {
-      location,
-      guest_name,
-      email: "online@reserva.lozio",
-      phone,
-      reservation_date,
-      reservation_time,
-      guests: String(guestsNum),
-      notes: tableIds.length > 1 ? `${notes || ""} [Grupo ${guestsNum}p: ${tableNames}]`.trim() : (notes || null),
-      user_id: verifiedUserId,
-      table_id: tableIds[0],
-      table_ids: tableIds,
-      status: "confirmed",
-    };
-
-    const { data: reservations, error: insertError } = await supabase
-      .from("reservations")
-      .insert([reservationInsert])
-      .select();
-
-    if (insertError) {
-      console.error("Insert error:", insertError);
-      throw new Error("Error creating reservation");
-    }
+    const tableIds: string[] = result.table_ids ?? [];
+    const tableNames: string = result.table_names ?? "asignada";
 
     return new Response(
       JSON.stringify({
         success: true,
-        reservation_id: reservations?.[0]?.id,
+        reservation_id: result.reservation_id,
         table_name: tableNames,
         message: `¡Reserva confirmada! Te esperamos el ${reservation_date} a las ${reservation_time.substring(0, 5)} en ${tableIds.length > 1 ? "las mesas" : "la"} ${tableNames}.`,
       }),

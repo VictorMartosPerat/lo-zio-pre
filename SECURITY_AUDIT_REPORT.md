@@ -149,7 +149,7 @@ Ninguna vulnerabilidad permite acceso no autenticado a datos sensibles ni ejecuc
 
 ---
 
-### [MEDIA] M-02 — Race condition (TOCTOU) en asignación de mesas
+### [MEDIA] M-02 — Race condition (TOCTOU) en asignación de mesas — ✅ RESUELTO 2026-05-09
 
 - **Ubicación:** `supabase/migrations/20260324222504_*.sql` (función `find_available_tables_multi`) + `supabase/functions/auto-assign-reservation/index.ts:61–108`
 - **Descripción:** la función Edge llama `find_available_tables_multi` (que solo lee), recibe IDs de mesas libres, y luego ejecuta un INSERT en `reservations`. No hay locking entre lectura e inserción. Dos clientes que reserven el mismo slot horario al mismo tiempo pueden recibir el mismo `table_id` y ambos completar la inserción → doble booking.
