@@ -54,7 +54,7 @@ All Edge Functions use `Access-Control-Allow-Origin: "*"`. Per-function status:
 | `send-push-notification` | (default true) | Test path checks admin JWT; webhook path open | ✅ Done |
 | `create-payment-intent` | (default true) | No per-user check; server-side total calc only | ⚠ Low risk — consider adding owner check (P3) |
 | `notify-order-status` | false (DB webhook) | No auth; relies on trigger | ✅ Errors sanitized (was leaking) |
-| `send-transactional-email` | true | Currently accepts anon JWT (any browser) | ❌ **HIGH — phishing/spam vector. See SECURITY_REMEDIATION_PLAN.md H-01** |
+| `send-transactional-email` | true | service_role OR staff OR self-send | ✅ Done (was: accepted anon JWT — phishing vector) |
 | `process-email-queue` | true | service_role role check | ✅ Done |
 | `preview-transactional-email` | false | LOVABLE_API_KEY bearer (not constant-time) | ⚠ LOW — timing-attack theoretical |
 | `handle-email-unsubscribe` | false | Token from URL/body | ✅ Done (atomic check-and-update) |

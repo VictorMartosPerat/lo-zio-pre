@@ -30,7 +30,7 @@ Ninguna vulnerabilidad permite acceso no autenticado a datos sensibles ni ejecuc
 
 ## Hallazgos detallados
 
-### [ALTA] H-01 — Envío de email transaccional accesible para cualquier visitante (vector de phishing)
+### [ALTA] H-01 — Envío de email transaccional accesible para cualquier visitante (vector de phishing) — ✅ RESUELTO 2026-05-09
 
 - **Ubicación:** `supabase/functions/send-transactional-email/index.ts` + `supabase/config.toml`
 - **Descripción:** La función está configurada con `verify_jwt = true`, lo que en Supabase acepta el JWT anónimo (la `VITE_SUPABASE_PUBLISHABLE_KEY` que se sirve a cualquier visitante en el bundle JS). La función no verifica que el `recipientEmail` corresponda al usuario autenticado ni que el caller sea admin/service_role. Combinado con `templateData` arbitrario y `templateName` de un registro pequeño pero suficiente, permite enviar emails desde el dominio verificado de la pizzería a cualquier destinatario.

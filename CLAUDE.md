@@ -119,7 +119,7 @@ Global UI components (`CartDrawer`, `CartFloatingButton`, `MobileBottomNav`, `Ad
   - `refund-order` — admin only.
   - `notify-order-status` — DB-webhook-triggered email on order status change (`verify_jwt = false`).
   - `send-push-notification` — DB-webhook-triggered admin push; `test:true` path requires admin JWT.
-  - `send-transactional-email` — enqueues emails into pgmq. **Currently callable by any anon JWT — to be restricted; see SECURITY_REMEDIATION_PLAN.md H-01.**
+  - `send-transactional-email` — enqueues emails into pgmq. Requires service_role JWT, staff role (admin/pizzeria*), or self-send (recipient matches caller's email).
   - `process-email-queue` — pg_cron-driven dispatcher; service-role only.
   - `preview-transactional-email` — `LOVABLE_API_KEY` gated.
   - `handle-email-unsubscribe` — public (token-based, RFC 8058 one-click).

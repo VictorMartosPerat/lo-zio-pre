@@ -21,6 +21,8 @@ const corsHeaders = {
     'authorization, x-client-info, apikey, content-type',
 }
 
+const STAFF_ROLES = new Set(['admin', 'pizzeriaTarragona', 'pizzeriaArrabassada'])
+
 // Generate a cryptographically random 32-byte hex token
 function generateToken(): string {
   const bytes = new Uint8Array(32)
@@ -30,9 +32,29 @@ function generateToken(): string {
     .join('')
 }
 
-// Auth note: this function uses verify_jwt = true in config.toml, so Supabase's
-// gateway validates the caller's JWT (anon or service_role) before the request
-// reaches this code. No in-function auth check is needed.
+function parseJwtClaims(token: string): Record<string, unknown> | null {
+  const parts = token.split('.')
+  if (parts.length < 2) return null
+  try {
+    const payload = parts[1]
+      .replaceAll('-', '+')
+      .replaceAll('_', '/')
+      .padEnd(Math.ceil(parts[1].length / 4) * 4, '=')
+    return JSON.parse(atob(payload)) as Record<string, unknown>
+  } catch {
+    return null
+  }
+}
+
+// Auth note: verify_jwt = true at the gateway authenticates the JWT but
+// accepts the anon JWT (the publishable key shipped to every browser). Without
+// an in-function role/identity check, anyone could send arbitrary emails from
+// the project's verified domain — a phishing/spam vector. The check below
+// requires:
+//   - service_role JWT (DB webhooks, cron, other Edge Functions), OR
+//   - staff role (admin / pizzeriaTarragona / pizzeriaArrabassada) — staff
+//     legitimately send emails to customers, OR
+//   - authenticated user whose own email matches the recipient (self-only).
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
@@ -124,6 +146,60 @@ Deno.serve(async (req) => {
 
   // Create Supabase client with service role (bypasses RLS)
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+  // ── AUTHORIZATION ─────────────────────────────────────────────────────────
+  // See comment at top of file. Reject anything that isn't service-role,
+  // staff, or a self-send by an authenticated user.
+  const authHeader = req.headers.get('Authorization')
+  const bearer = authHeader?.replace(/^Bearer\s+/i, '') ?? ''
+  const claims = parseJwtClaims(bearer)
+
+  if (claims?.role !== 'service_role') {
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    const supabaseUser = createClient(
+      supabaseUrl,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: authHeader } } },
+    )
+    const { data: { user }, error: authError } = await supabaseUser.auth.getUser()
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    const { data: roleRows } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+    const callerRoles = (roleRows ?? []).map((r: { role: string }) => r.role)
+    const isStaff = callerRoles.some((r) => STAFF_ROLES.has(r))
+    const isSelfSend =
+      !!user.email &&
+      effectiveRecipient.toLowerCase() === user.email.toLowerCase()
+
+    if (!isStaff && !isSelfSend) {
+      console.warn('send-transactional-email blocked: caller may not send to this recipient', {
+        caller_user_id: user.id,
+        caller_roles: callerRoles,
+        recipient_redacted:
+          effectiveRecipient[0] + '***@' + effectiveRecipient.split('@')[1],
+        templateName,
+      })
+      return new Response(JSON.stringify({ error: 'Forbidden' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+  }
+  // ──────────────────────────────────────────────────────────────────────────
 
   // 2. Check suppression list (fail-closed: if we can't verify, don't send)
   const { data: suppressed, error: suppressionError } = await supabase
