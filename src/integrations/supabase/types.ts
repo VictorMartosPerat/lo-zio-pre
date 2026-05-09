@@ -569,6 +569,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      atomic_assign_and_reserve: {
+        Args: {
+          _date: string
+          _guest_name: string
+          _guests: number
+          _location: string
+          _notes: string
+          _phone: string
+          _time: string
+          _user_id: string
+        }
+        Returns: Json
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
