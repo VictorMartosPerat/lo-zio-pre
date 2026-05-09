@@ -12,9 +12,45 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    // Supabase DB webhook sends { type, table, schema, record, old_record }
-    // Manual test: { test: true, user_id?: string }
     const isTest = body.test === true;
+
+    // Test path requires a verified admin JWT — DB webhook calls never set test:true
+    if (isTest) {
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const supabaseUser = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_ANON_KEY")!,
+        { global: { headers: { Authorization: authHeader } } },
+      );
+      const { data: { user }, error: authError } = await supabaseUser.auth.getUser();
+      if (authError || !user) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const supabaseCheck = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      );
+      const { data: roleData } = await supabaseCheck
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      if (!roleData) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    // Supabase DB webhook sends { type, table, schema, record, old_record }
     const record = body.record ?? body;
 
     const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY")!;
@@ -28,7 +64,6 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Get all admin user IDs
     const { data: adminRoles } = await supabase
       .from("user_roles")
       .select("user_id")
@@ -41,9 +76,9 @@ serve(async (req) => {
     }
 
     const adminIds = adminRoles.map((r: { user_id: string }) => r.user_id);
-    const targetIds = isTest && body.user_id ? [body.user_id] : adminIds;
+    // Test sends only to the requesting admin, not all admins
+    const targetIds = isTest ? [adminIds[0]] : adminIds;
 
-    // Get all push subscriptions for those admins
     const { data: subscriptions } = await supabase
       .from("push_subscriptions")
       .select("*")
@@ -57,7 +92,6 @@ serve(async (req) => {
       });
     }
 
-    // Build notification payload
     const [y, m, d] = (record.reservation_date ?? "").split("-");
     const formattedDate = d ? `${d}/${m}/${y}` : "";
     const formattedTime = (record.reservation_time ?? "").substring(0, 5);
@@ -80,7 +114,6 @@ serve(async (req) => {
           },
     );
 
-    // Send to all subscriptions, clean up expired ones (HTTP 410)
     const results = await Promise.allSettled(
       subscriptions.map(async (sub: { endpoint: string; p256dh: string; auth: string }) => {
         try {
@@ -104,7 +137,7 @@ serve(async (req) => {
     });
   } catch (err) {
     console.error("send-push-notification error:", err);
-    return new Response(JSON.stringify({ error: String(err) }), {
+    return new Response(JSON.stringify({ error: "Notification failed." }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
