@@ -26,22 +26,39 @@ This document briefs a security-focused Claude agent on the architecture, known 
 - **`user_roles` read policy**: Only `auth.uid() = user_id` — users cannot enumerate other users' roles.
 - **Cart price not trusted**: Checkout writes items to `order_items` first, then the Edge Function recalculates the total from the DB row.
 - **Admin cache is UI-only**: `localStorage` `lozio_is_admin` only affects rendering; actual admin actions are gated by RLS `has_role()` server-side.
+- **Stored XSS hardening**: `reject_html_input` BEFORE INSERT/UPDATE trigger blocks `<tag`, `javascript:`, `data:` patterns in all free-text columns of `orders`, `reservations`, `reviews`, `profiles` (incl. `internal_notes` since migration 00007).
+- **Path traversal hardening**: `media.file_path` has a CHECK constraint blocking `../`, absolute paths, and disallowed characters.
+- **Enum integrity**: DB-level CHECK constraints on `status`, `payment_status`, `order_type`, `payment_method`, `location`, `category` columns prevent direct REST API from setting arbitrary values.
+- **Anon INSERT scope**: orders and reservations REST inserts locked to `status = 'pending'` + valid enums (migration 00005).
+- **internal_notes write protection**: BEFORE UPDATE trigger raises if a non-admin tries to change `internal_notes` (migration 00006).
+- **Admin Edge Function authorization**: `refund-order`, `confirm-reservation`, `auto-assign-reservation` (admin-mode), `send-push-notification` (test path) all verify the JWT and check `user_roles` for admin role.
+- **Service-role-only functions**: `process-email-queue` checks `claims.role === 'service_role'` in addition to gateway JWT.
+- **Webhook authentication**: `handle-email-suppression` uses HMAC verification via `@lovable.dev/webhooks-js`.
+- **Email send deduplication**: unique partial index on `email_send_log(message_id) WHERE status = 'sent'`.
+- **CSP**: strict policy in `index.html` (no `unsafe-inline` for scripts, no `unsafe-eval`).
+- **Auth error UX**: translated, generic error messages for rate-limit, invalid credentials, email-taken, etc., in all 4 languages.
 
 ---
 
 ## Known attack surfaces to audit
 
-### 1. Edge Functions — missing authorization checks
+### 0. Edge Functions — current state (post 2026-05-09 audit)
 
-All Edge Functions use `Access-Control-Allow-Origin: "*"` and none verify the caller's identity against the Supabase JWT. Critical ones:
+All Edge Functions use `Access-Control-Allow-Origin: "*"`. Per-function status:
 
-| Function | Risk | What to check |
-|---|---|---|
-| `refund-order` | Anyone with a known `orderId` (UUID) can trigger a full Stripe refund | Add JWT verification; only admins should call this |
-| `confirm-reservation` | Anyone with a `reservation_id` can confirm any reservation | Add JWT + admin role check |
-| `auto-assign-reservation` | Accepts `is_admin: true` from the **request body** — client-supplied privilege escalation | `is_admin` must be derived from the verified JWT, not the request payload |
-| `send-push-notification` | Accepts `{ test: true, user_id }` with no auth — anyone can trigger test pushes to any admin | Add JWT check; only admins should call directly |
-| `create-payment-intent` | Low risk (amount is recalculated server-side), but no caller verification | Consider verifying the orderId belongs to the requesting user |
+| Function | verify_jwt | Auth model | Status |
+|---|---|---|---|
+| `refund-order` | true | Admin role check in code | ✅ Done |
+| `confirm-reservation` | true | Admin role check in code | ✅ Done |
+| `auto-assign-reservation` | (default true) | Admin/user_id derived from JWT | ✅ Done (was: client-supplied `is_admin` and `user_id`) |
+| `send-push-notification` | (default true) | Test path checks admin JWT; webhook path open | ✅ Done |
+| `create-payment-intent` | (default true) | No per-user check; server-side total calc only | ⚠ Low risk — consider adding owner check (P3) |
+| `notify-order-status` | false (DB webhook) | No auth; relies on trigger | ✅ Errors sanitized (was leaking) |
+| `send-transactional-email` | true | Currently accepts anon JWT (any browser) | ❌ **HIGH — phishing/spam vector. See SECURITY_REMEDIATION_PLAN.md H-01** |
+| `process-email-queue` | true | service_role role check | ✅ Done |
+| `preview-transactional-email` | false | LOVABLE_API_KEY bearer (not constant-time) | ⚠ LOW — timing-attack theoretical |
+| `handle-email-unsubscribe` | false | Token from URL/body | ✅ Done (atomic check-and-update) |
+| `handle-email-suppression` | false | HMAC signature (Lovable webhook lib) | ✅ Done |
 
 **Remediation pattern for Edge Functions (Deno):**
 ```typescript
@@ -122,8 +139,14 @@ For every table in `supabase/migrations/`, verify:
 
 ## Security review workflow for this repo
 
-1. **New Edge Function**: check JWT auth, CORS origin, error message sanitization, and that `is_admin`/`user_id` are derived from the verified token, not the request body.
-2. **New DB table/column**: check RLS is enabled, all four CRUD policies exist, sensitive columns are not user-writable.
-3. **New migration**: search for `SECURITY DEFINER` — ensure `SET search_path = public` is set.
+This list complements the [pre-flight checklist in CLAUDE.md](./CLAUDE.md#pre-flight-security-checklist-mandatory-before-any-change). Use that one *before* writing code; use this one *after* a change is implemented to verify nothing slipped:
+
+1. **New Edge Function**: check `verify_jwt` setting, CORS origin, error message sanitization, and that `is_admin`/`user_id` are derived from the verified token, not the request body. **`verify_jwt = true` alone is insufficient — it accepts the anon JWT shipped to every browser.**
+2. **New DB table/column**: check RLS is enabled, all four CRUD policies exist, sensitive columns are not user-writable. New free-text columns must be added to the `reject_html_input` trigger.
+3. **New migration**: search for `SECURITY DEFINER` — ensure `SET search_path = public` is set. If the migration adds a trigger that calls `net.http_post` to an Edge Function, ensure the call includes the service-role bearer token from Vault.
 4. **New client feature that calls Supabase directly**: check that the operation cannot succeed with the `anon` role when it should require auth.
-5. **Any rendering of user-supplied data**: confirm no `dangerouslySetInnerHTML`, and that `Json`-typed fields are treated as untrusted input.
+5. **Any rendering of user-supplied data**:
+   - No `dangerouslySetInnerHTML` with anything that isn't a constant.
+   - `href={...}`, `src={...}`, `style={...}` with user data must be validated with a strict regex (e.g. phone numbers: `/^[+\d\s\-().]{1,20}$/`). **The 2026-05-09 audit found this regression: `IncomingOrderManager.tsx` reintroduced an unvalidated `tel:` href that had been correctly handled in `AdminOrders.tsx`.** Always grep for similar patterns when adding new components that handle the same data.
+   - `Json`-typed fields are untrusted input.
+6. **Regression discipline**: when fixing a vulnerability in one file, `grep` the codebase for the same data flow and apply the fix everywhere. Add a comment near the fix referencing the CWE so future readers know why the regex/check exists.

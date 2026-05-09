@@ -15,7 +15,7 @@ serve(async (req) => {
   }
 
   try {
-    const { location, guest_name, phone, reservation_date, reservation_time, guests, notes, user_id } =
+    const { location, guest_name, phone, reservation_date, reservation_time, guests, notes } =
       await req.json();
 
     if (!location || !guest_name || !phone || !reservation_date || !reservation_time || !guests) {
@@ -31,8 +31,11 @@ serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Derive admin status from the verified JWT — never from the request body
+    // Derive caller identity (user_id, admin status) from the verified JWT —
+    // never from the request body. user_id from a client-supplied field would
+    // let an attacker attribute reservations to other users.
     let callerIsAdmin = false;
+    let verifiedUserId: string | null = null;
     const authHeader = req.headers.get("Authorization");
     if (authHeader) {
       const supabaseUser = createClient(
@@ -42,6 +45,7 @@ serve(async (req) => {
       );
       const { data: { user } } = await supabaseUser.auth.getUser();
       if (user) {
+        verifiedUserId = user.id;
         const { data: roleData } = await supabase
           .from("user_roles")
           .select("role")
@@ -96,7 +100,7 @@ serve(async (req) => {
       reservation_time,
       guests: String(guestsNum),
       notes: tableIds.length > 1 ? `${notes || ""} [Grupo ${guestsNum}p: ${tableNames}]`.trim() : (notes || null),
-      user_id: user_id || null,
+      user_id: verifiedUserId,
       table_id: tableIds[0],
       table_ids: tableIds,
       status: "confirmed",

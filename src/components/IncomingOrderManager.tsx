@@ -313,7 +313,7 @@ const IncomingOrderManager = () => {
                 <span className="font-semibold">{current.guest_name}</span>
               </div>
               <a
-                href={`tel:${current.guest_phone}`}
+                href={/^[+\d\s\-().]{1,20}$/.test(current.guest_phone) ? `tel:${current.guest_phone}` : '#'}
                 className="flex items-center gap-2 text-sm text-primary"
               >
                 <Phone className="h-4 w-4" />
