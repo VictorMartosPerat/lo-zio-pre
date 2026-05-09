@@ -12,43 +12,72 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Verify caller is an authenticated admin
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const supabaseUser = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_ANON_KEY")!,
+    { global: { headers: { Authorization: authHeader } } },
+  );
+  const { data: { user }, error: authError } = await supabaseUser.auth.getUser();
+  if (authError || !user) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
+
+  const { data: roleData } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", user.id)
+    .eq("role", "admin")
+    .maybeSingle();
+
+  if (!roleData) {
+    return new Response(JSON.stringify({ error: "Forbidden" }), {
+      status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const { reservation_id } = await req.json();
     if (!reservation_id) throw new Error("reservation_id is required");
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
-
-    // 1. Fetch reservation
     const { data: reservation, error: fetchError } = await supabase
       .from("reservations")
-      .select("*")
+      .select("id, status")
       .eq("id", reservation_id)
       .single();
 
-    if (fetchError || !reservation) {
-      throw new Error("Reservation not found");
-    }
+    if (fetchError || !reservation) throw new Error("Reservation not found");
 
-    // 2. Update status to confirmed
     const { error: updateError } = await supabase
       .from("reservations")
       .update({ status: "confirmed" })
       .eq("id", reservation_id);
 
-    if (updateError) throw new Error(`Update failed: ${updateError.message}`);
+    if (updateError) throw new Error("Update failed");
 
     return new Response(
       JSON.stringify({ success: true }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : "Unknown error";
-    console.error("Error in confirm-reservation:", msg);
+    console.error("Error in confirm-reservation:", error instanceof Error ? error.message : error);
     return new Response(
-      JSON.stringify({ error: msg }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ error: "Operation failed. Contact support." }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 });

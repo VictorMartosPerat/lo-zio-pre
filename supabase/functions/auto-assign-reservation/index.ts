@@ -7,27 +7,55 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const ALLOWED_LOCATIONS = new Set(["tarragona", "arrabassada", "rincon"]);
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { location, guest_name, phone, reservation_date, reservation_time, guests, notes, user_id, is_admin } =
+    const { location, guest_name, phone, reservation_date, reservation_time, guests, notes, user_id } =
       await req.json();
 
     if (!location || !guest_name || !phone || !reservation_date || !reservation_time || !guests) {
       throw new Error("Missing required fields");
     }
 
-    const guestsNum = parseInt(guests) || 2;
-    if (!is_admin && (guestsNum < 1 || guestsNum > 10)) {
-      throw new Error("El número de comensales debe ser entre 1 y 10 para reservas online.");
+    // location must be a known store slug — never trust as URL or path
+    if (!ALLOWED_LOCATIONS.has(location)) {
+      throw new Error("Invalid location");
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
+
+    // Derive admin status from the verified JWT — never from the request body
+    let callerIsAdmin = false;
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader) {
+      const supabaseUser = createClient(
+        supabaseUrl,
+        Deno.env.get("SUPABASE_ANON_KEY")!,
+        { global: { headers: { Authorization: authHeader } } },
+      );
+      const { data: { user } } = await supabaseUser.auth.getUser();
+      if (user) {
+        const { data: roleData } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .eq("role", "admin")
+          .maybeSingle();
+        callerIsAdmin = !!roleData;
+      }
+    }
+
+    const guestsNum = parseInt(guests) || 2;
+    if (!callerIsAdmin && (guestsNum < 1 || guestsNum > 10)) {
+      throw new Error("El número de comensales debe ser entre 1 y 10 para reservas online.");
+    }
 
     // Find available tables using the multi-table DB function
     const { data: tableIds, error: rpcError } = await supabase.rpc("find_available_tables_multi", {
@@ -94,9 +122,8 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : "Unknown error";
-    console.error("Error in auto-assign-reservation:", msg);
-    return new Response(JSON.stringify({ success: false, error: "server_error", message: msg }), {
+    console.error("Error in auto-assign-reservation:", error instanceof Error ? error.message : error);
+    return new Response(JSON.stringify({ success: false, error: "server_error", message: "Reservation failed. Please try again." }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

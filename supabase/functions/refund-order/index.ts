@@ -13,52 +13,75 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Verify caller is an authenticated admin
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const supabaseUser = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_ANON_KEY")!,
+    { global: { headers: { Authorization: authHeader } } },
+  );
+  const { data: { user }, error: authError } = await supabaseUser.auth.getUser();
+  if (authError || !user) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
+
+  const { data: roleData } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", user.id)
+    .eq("role", "admin")
+    .maybeSingle();
+
+  if (!roleData) {
+    return new Response(JSON.stringify({ error: "Forbidden" }), {
+      status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const { orderId } = await req.json();
     if (!orderId) throw new Error("orderId is required");
 
     const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeSecretKey) throw new Error("Stripe secret key not configured");
+    if (!stripeSecretKey) throw new Error("Stripe not configured");
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
-
-    // Fetch order
     const { data: order, error: orderError } = await supabase
       .from("orders")
-      .select("id, payment_status, stripe_payment_intent_id, total_amount")
+      .select("id, payment_status, stripe_payment_intent_id")
       .eq("id", orderId)
       .single();
 
     if (orderError || !order) throw new Error("Order not found");
     if (order.payment_status !== "paid") throw new Error("Order is not paid");
-    if (!order.stripe_payment_intent_id) throw new Error("No payment intent found for this order");
+    if (!order.stripe_payment_intent_id) throw new Error("No payment intent for this order");
 
     const stripe = new Stripe(stripeSecretKey, { apiVersion: "2023-10-16" });
+    const refund = await stripe.refunds.create({ payment_intent: order.stripe_payment_intent_id });
 
-    // Issue full refund
-    const refund = await stripe.refunds.create({
-      payment_intent: order.stripe_payment_intent_id,
-    });
-
-    // Update order payment status
-    await supabase
-      .from("orders")
-      .update({ payment_status: "refunded" })
-      .eq("id", orderId);
+    await supabase.from("orders").update({ payment_status: "refunded" }).eq("id", orderId);
 
     return new Response(
       JSON.stringify({ success: true, refundId: refund.id }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : "Unknown error";
-    console.error("Error in refund-order:", msg);
+    console.error("Error in refund-order:", error instanceof Error ? error.message : error);
     return new Response(
-      JSON.stringify({ error: msg }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ error: "Refund failed. Contact support." }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 });
