@@ -9,6 +9,15 @@ import { useAuth } from '@/hooks/useAuth';
 import logoZio from '@/assets/logozio.png';
 import heroPizza from '@/assets/fondopizza.jpg';
 
+function getAuthError(error: { message: string; status?: number }, t: (key: string) => string): string {
+  const msg = error.message.toLowerCase();
+  if (error.status === 429 || msg.includes('rate limit') || msg.includes('too many')) return t('auth.errorRateLimit');
+  if (msg.includes('invalid login credentials') || msg.includes('invalid credentials')) return t('auth.errorInvalidCredentials');
+  if (msg.includes('user already registered') || msg.includes('already registered')) return t('auth.errorEmailTaken');
+  if (msg.includes('email not confirmed')) return t('auth.errorEmailNotConfirmed');
+  return t('auth.errorGeneric');
+}
+
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -37,7 +46,7 @@ const Auth = () => {
     if (isLogin) {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
-        toast.error(error.message);
+        toast.error(getAuthError(error, t));
       } else {
         toast.success(t('auth.welcomeBack'));
         navigate('/perfil');
@@ -54,7 +63,7 @@ const Auth = () => {
         options: { emailRedirectTo: window.location.origin },
       });
       if (error) {
-        toast.error(error.message);
+        toast.error(getAuthError(error, t));
       } else {
         toast.success(t('auth.accountCreated'));
       }

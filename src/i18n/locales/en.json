@@ -154,7 +154,22 @@
     "noAccount": "Don't have an account? Sign up",
     "hasAccount": "Already have an account? Sign in",
     "welcomeBack": "Welcome back!",
-    "accountCreated": "Account created! Check your email to confirm."
+    "accountCreated": "Account created! Check your email to confirm.",
+    "forgotPassword": "Forgot your password?",
+    "forgotPasswordTitle": "Reset password",
+    "forgotPasswordDesc": "We'll send you a link to reset your password.",
+    "sendResetLink": "Send link",
+    "resetLinkSent": "Link sent! Check your inbox.",
+    "resetPasswordTitle": "New password",
+    "resetPasswordDesc": "Enter your new password.",
+    "resetPassword": "Change password",
+    "passwordResetSuccess": "Password updated! You can now sign in.",
+    "passwordResetError": "Error changing password",
+    "errorRateLimit": "Too many attempts. Please wait a few minutes and try again.",
+    "errorInvalidCredentials": "Incorrect email or password.",
+    "errorEmailTaken": "This email is already registered. Want to sign in?",
+    "errorEmailNotConfirmed": "Please confirm your email before signing in. Check your inbox.",
+    "errorGeneric": "Something went wrong. Please try again."
   },
   "profile": {
     "title": "My Profile",

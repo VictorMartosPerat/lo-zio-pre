@@ -3,6 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
+function getAuthError(error: { message: string; status?: number }, t: (key: string) => string): string {
+  const msg = error.message.toLowerCase();
+  if (error.status === 429 || msg.includes('rate limit') || msg.includes('too many')) return t('auth.errorRateLimit');
+  return t('auth.errorGeneric');
+}
 import logoZio from '@/assets/logozio.png';
 import heroPizza from "@/assets/fondopizza.jpg";
 
@@ -44,7 +50,7 @@ const ResetPassword = () => {
       redirectTo: `${window.location.origin}/reset-password`,
     });
     if (error) {
-      toast.error(error.message);
+      toast.error(getAuthError(error, t));
     } else {
       toast.success(t('auth.resetLinkSent'));
     }

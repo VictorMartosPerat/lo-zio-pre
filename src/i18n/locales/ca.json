@@ -154,7 +154,22 @@
     "noAccount": "No tens compte? Registra't",
     "hasAccount": "Ja tens compte? Inicia sessió",
     "welcomeBack": "Benvingut de nou!",
-    "accountCreated": "Compte creat! Revisa el teu email per confirmar."
+    "accountCreated": "Compte creat! Revisa el teu email per confirmar.",
+    "forgotPassword": "Has oblidat la contrasenya?",
+    "forgotPasswordTitle": "Recuperar contrasenya",
+    "forgotPasswordDesc": "T'enviarem un enllaç per restablir la teva contrasenya.",
+    "sendResetLink": "Enviar enllaç",
+    "resetLinkSent": "Enllaç enviat! Revisa la teva bústia.",
+    "resetPasswordTitle": "Nova contrasenya",
+    "resetPasswordDesc": "Introdueix la teva nova contrasenya.",
+    "resetPassword": "Canviar contrasenya",
+    "passwordResetSuccess": "Contrasenya actualitzada! Ja pots iniciar sessió.",
+    "passwordResetError": "Error en canviar la contrasenya",
+    "errorRateLimit": "Massa intents. Espera uns minuts i torna-ho a intentar.",
+    "errorInvalidCredentials": "Email o contrasenya incorrectes.",
+    "errorEmailTaken": "Aquest email ja està registrat. Vols iniciar sessió?",
+    "errorEmailNotConfirmed": "Confirma el teu email abans d'iniciar sessió. Revisa la teva bústia.",
+    "errorGeneric": "Quelcom ha fallat. Torna-ho a intentar."
   },
   "profile": {
     "title": "El Meu Perfil",

@@ -154,7 +154,22 @@
     "noAccount": "Non hai un account? Registrati",
     "hasAccount": "Hai già un account? Accedi",
     "welcomeBack": "Bentornato!",
-    "accountCreated": "Account creato! Controlla la tua email per confermare."
+    "accountCreated": "Account creato! Controlla la tua email per confermare.",
+    "forgotPassword": "Hai dimenticato la password?",
+    "forgotPasswordTitle": "Recupera password",
+    "forgotPasswordDesc": "Ti invieremo un link per reimpostare la tua password.",
+    "sendResetLink": "Invia link",
+    "resetLinkSent": "Link inviato! Controlla la tua casella di posta.",
+    "resetPasswordTitle": "Nuova password",
+    "resetPasswordDesc": "Inserisci la tua nuova password.",
+    "resetPassword": "Cambia password",
+    "passwordResetSuccess": "Password aggiornata! Puoi ora accedere.",
+    "passwordResetError": "Errore nel cambio password",
+    "errorRateLimit": "Troppi tentativi. Attendi qualche minuto e riprova.",
+    "errorInvalidCredentials": "Email o password non corretti.",
+    "errorEmailTaken": "Questa email è già registrata. Vuoi accedere?",
+    "errorEmailNotConfirmed": "Conferma la tua email prima di accedere. Controlla la tua casella di posta.",
+    "errorGeneric": "Qualcosa è andato storto. Riprova."
   },
   "profile": {
     "title": "Il Mio Profilo",

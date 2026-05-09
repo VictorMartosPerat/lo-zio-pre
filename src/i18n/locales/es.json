@@ -164,7 +164,12 @@
     "resetPasswordDesc": "Introduce tu nueva contraseña.",
     "resetPassword": "Cambiar contraseña",
     "passwordResetSuccess": "¡Contraseña actualizada! Ya puedes iniciar sesión.",
-    "passwordResetError": "Error al cambiar la contraseña"
+    "passwordResetError": "Error al cambiar la contraseña",
+    "errorRateLimit": "Demasiados intentos. Espera unos minutos e inténtalo de nuevo.",
+    "errorInvalidCredentials": "Email o contraseña incorrectos.",
+    "errorEmailTaken": "Este email ya está registrado. ¿Quieres iniciar sesión?",
+    "errorEmailNotConfirmed": "Confirma tu email antes de iniciar sesión. Revisa tu bandeja de entrada.",
+    "errorGeneric": "Algo salió mal. Inténtalo de nuevo."
   },
   "profile": {
     "title": "Mi Perfil",
