@@ -23,7 +23,6 @@ const Profile = () => {
     postal_code: "",
     allergies: [] as string[],
     food_preferences: "",
-    favorite_table_area: "",
   });
 
   useEffect(() => {
@@ -37,7 +36,7 @@ const Profile = () => {
   const fetchProfile = async () => {
     const { data, error } = await supabase
       .from("profiles")
-      .select("full_name, phone, address, city, postal_code, allergies, food_preferences, favorite_table_area")
+      .select("full_name, phone, address, city, postal_code, allergies, food_preferences")
       .eq("user_id", user!.id)
       .maybeSingle();
 
@@ -51,7 +50,6 @@ const Profile = () => {
       postal_code: data.postal_code || "",
       allergies: (data.allergies as string[]) || [],
       food_preferences: data.food_preferences || "",
-      favorite_table_area: data.favorite_table_area || "",
     });
   };
 
@@ -68,7 +66,6 @@ const Profile = () => {
       postal_code: profile.postal_code,
       allergies: profile.allergies,
       food_preferences: profile.food_preferences,
-      favorite_table_area: profile.favorite_table_area,
     };
 
     const { data: existingProfile, error: existingProfileError } = await supabase

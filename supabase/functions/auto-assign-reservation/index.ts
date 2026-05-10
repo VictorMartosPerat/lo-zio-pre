@@ -57,8 +57,8 @@ serve(async (req) => {
     }
 
     const guestsNum = parseInt(guests) || 2;
-    if (!callerIsAdmin && (guestsNum < 1 || guestsNum > 10)) {
-      throw new Error("El número de comensales debe ser entre 1 y 10 para reservas online.");
+    if (!callerIsAdmin && (guestsNum < 1 || guestsNum > 15)) {
+      throw new Error("El número de comensales debe ser entre 1 y 15 para reservas online.");
     }
 
     // Atomic table lookup + reservation insert under an advisory lock,
