@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSearchParams, useNavigate, Link } from "react-router-dom";
+import { useSearchParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -46,11 +46,21 @@ const OrderConfirmation = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const orderId = searchParams.get("id");
 
-  const [order, setOrder] = useState<Order | null>(null);
-  const [items, setItems] = useState<OrderItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Order data may arrive via three paths:
+  //   1) Router state (just placed by Checkout — fastest, no DB read needed).
+  //   2) Stripe redirect with ?payment_intent=... — confirmed via Edge Function.
+  //   3) Authenticated user navigating directly — fall back to DB read scoped
+  //      by RLS (auth.uid() = user_id).
+  // Anonymous users hitting this page directly cannot see the order: by
+  // design, guest orders have no persistent visibility (no /mis-pedidos).
+  const navState = location.state as { order?: Order; items?: OrderItem[] } | null;
+
+  const [order, setOrder] = useState<Order | null>(navState?.order ?? null);
+  const [items, setItems] = useState<OrderItem[]>(navState?.items ?? []);
+  const [loading, setLoading] = useState(!navState?.order);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
@@ -60,36 +70,46 @@ const OrderConfirmation = () => {
       return;
     }
 
-    const fetchOrder = async () => {
-      // If we came back from a Stripe redirect (Apple Pay / Google Pay / 3DS),
-      // mark the order as paid AND assign it to a pizzeria so the kitchen popup
-      // fires only after payment confirmation.
+    // Path 1: data arrived via router state — already rendered, nothing to do.
+    if (navState?.order) {
+      setLoading(false);
+      return;
+    }
+
+    const loadOrder = async () => {
       const paymentIntentId = searchParams.get("payment_intent");
       const redirectStatus = searchParams.get("redirect_status");
+
+      // Path 2: Stripe redirect (Apple Pay / Google Pay / 3DS). Verify with
+      // Stripe via Edge Function — also marks order as paid and returns the
+      // order so guests can see the confirmation without needing SELECT RLS.
       if (paymentIntentId && redirectStatus === "succeeded") {
-        // Read pickup_store to derive the assigned pizzeria
-        const { data: existing } = await supabase
-          .from("orders")
-          .select("pickup_store, assigned_to")
-          .eq("id", orderId)
-          .single();
-        const assignedTo: "tarragona" | "arrabassada" =
-          existing?.pickup_store === "arrabassada" ? "arrabassada" : "tarragona";
-        await supabase
-          .from("orders")
-          .update({
-            payment_status: "paid",
-            stripe_payment_intent_id: paymentIntentId,
-            assigned_to: existing?.assigned_to ?? assignedTo,
-          })
-          .eq("id", orderId);
+        const { data, error } = await supabase.functions.invoke(
+          "confirm-stripe-payment",
+          { body: { orderId, paymentIntentId } },
+        );
+        if (!error && data?.success && data.order) {
+          setOrder(data.order as Order);
+          setItems((data.items as OrderItem[]) ?? []);
+          setLoading(false);
+          return;
+        }
+        // Fall through — maybe the user is logged in and can read directly.
+      }
+
+      // Path 3: authenticated user — RLS allows reading their own order.
+      // Anonymous users will get an empty result and we show "not found".
+      if (!user) {
+        setNotFound(true);
+        setLoading(false);
+        return;
       }
 
       const { data: orderData, error: orderError } = await supabase
         .from("orders")
         .select("*")
         .eq("id", orderId)
-        .single();
+        .maybeSingle();
 
       if (orderError || !orderData) {
         setNotFound(true);
@@ -107,8 +127,8 @@ const OrderConfirmation = () => {
       setLoading(false);
     };
 
-    fetchOrder();
-  }, [orderId, searchParams]);
+    loadOrder();
+  }, [orderId, searchParams, user, navState?.order]);
 
   if (loading) {
     return (

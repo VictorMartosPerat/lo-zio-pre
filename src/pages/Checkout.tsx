@@ -65,7 +65,7 @@ const StripePaymentForm = ({
   totalPrice: number;
   customer: { name: string; email: string; phone: string };
   onBack: () => void;
-  onSuccess: () => void;
+  onSuccess: (data: { order: unknown; items: unknown[] }) => void;
 }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -95,37 +95,35 @@ const StripePaymentForm = ({
     });
 
     if (error) {
+      // Don't update payment_status from the client — the previous code did that
+      // via an over-permissive RLS policy that has been removed. The order remains
+      // 'pending' and the user can retry. Stale pending unpaid orders are pruned
+      // by the admin / a periodic job.
       setErrorMsg(error.message || t("checkout.stripeError"));
-      await supabase
-        .from("orders")
-        .update({ payment_status: "failed" })
-        .eq("id", orderId);
       setPaying(false);
       return;
     }
 
     if (paymentIntent?.status === "succeeded") {
-      // Read pickup_store to derive assigned pizzeria, then mark paid + assign.
-      const { data: existing } = await supabase
-        .from("orders")
-        .select("pickup_store, assigned_to")
-        .eq("id", orderId)
-        .single();
-      const assignedTo: "tarragona" | "arrabassada" =
-        existing?.pickup_store === "arrabassada" ? "arrabassada" : "tarragona";
-      await supabase
-        .from("orders")
-        .update({
-          payment_status: "paid",
-          stripe_payment_intent_id: paymentIntent.id,
-          assigned_to: existing?.assigned_to ?? assignedTo,
-        })
-        .eq("id", orderId);
-      onSuccess();
+      // Verify the payment server-side via Stripe API and mark as paid using
+      // the service role. This replaces the previous client-side UPDATE that
+      // depended on an over-permissive RLS policy.
+      const { data: confirmData, error: confirmError } = await supabase.functions.invoke(
+        "confirm-stripe-payment",
+        { body: { orderId, paymentIntentId: paymentIntent.id } },
+      );
+      if (confirmError || !confirmData?.success) {
+        setErrorMsg(t("checkout.stripeError"));
+        setPaying(false);
+        return;
+      }
+      onSuccess({ order: confirmData.order, items: confirmData.items });
       return;
     }
 
-    // For redirect-based methods (e.g. some wallets), browser will be redirected.
+    // For redirect-based methods (e.g. some wallets), browser will be redirected
+    // and OrderConfirmation will call confirm-stripe-payment with the params
+    // returned in the URL.
     setPaying(false);
   };
 
@@ -404,7 +402,9 @@ const Checkout = () => {
       // The order will be assigned in OrderConfirmation when payment_status flips to "paid".
       const isStripe = form.paymentMethod === "stripe";
 
-      // 1. Create order in Supabase
+      // 1. Create order in Supabase. Select the full row back so we can pass
+      // it via router state to OrderConfirmation — guests have no SELECT policy
+      // on orders, so re-reading from the confirmation page would otherwise fail.
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert({
@@ -437,7 +437,7 @@ const Checkout = () => {
           total_amount: totalPrice,
           scheduled_for: scheduledFor ? scheduledFor.toISOString() : null,
         })
-        .select("id")
+        .select("*")
         .single();
 
       if (orderError) throw orderError;
@@ -462,7 +462,10 @@ const Checkout = () => {
           total_price: item.price * item.quantity + extrasPrice,
         };
       });
-      const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
+      const { data: insertedItems, error: itemsError } = await supabase
+        .from("order_items")
+        .insert(orderItems)
+        .select("*");
       if (itemsError) throw itemsError;
 
       // NOTE: No email is sent on order creation.
@@ -485,9 +488,13 @@ const Checkout = () => {
         return;
       }
 
-      // Cash flow — order is complete, redirect immediately
+      // Cash flow — order is complete, redirect immediately. Pass the order +
+      // items via router state so OrderConfirmation can render them without a
+      // DB read (guests have no SELECT policy on orders).
       clearCart();
-      navigate(`/pedido-confirmado?id=${order.id}`);
+      navigate(`/pedido-confirmado?id=${order.id}`, {
+        state: { order, items: insertedItems ?? [] },
+      });
     } catch (err) {
       console.error(err);
       const msg = err instanceof Error ? err.message : t("checkout.orderError");
@@ -544,9 +551,11 @@ const Checkout = () => {
                 totalPrice={totalPrice}
                 customer={{ name: form.name, email: form.email, phone: form.phone }}
                 onBack={() => setStripeStep(null)}
-                onSuccess={() => {
+                onSuccess={(data) => {
                   clearCart();
-                  navigate(`/pedido-confirmado?id=${stripeStep.orderId}`);
+                  navigate(`/pedido-confirmado?id=${stripeStep.orderId}`, {
+                    state: { order: data.order, items: data.items },
+                  });
                 }}
               />
             </Elements>
