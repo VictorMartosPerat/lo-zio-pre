@@ -181,14 +181,12 @@ Ninguna vulnerabilidad permite acceso no autenticado a datos sensibles ni ejecuc
 
 ---
 
-### [MEDIA] M-04 — Bucket de Storage `media` totalmente público, sin restricción de listado
+### [MEDIA] M-04 — Bucket de Storage `media` totalmente público, sin restricción de listado — ✅ RESUELTO 2026-05-10 (riesgo mitigado por allowlist MIME)
 
 - **Ubicación:** `supabase/migrations/20260330201052_*.sql` línea 6 (`public = true`)
 - **Descripción:** el bucket `media` es público (lectura sin autenticación) con política de SELECT `using (true)`. Los uploads están restringidos a admins (correcto), pero cualquiera puede leer cualquier ruta dentro del bucket. Si un admin sube por error un documento sensible (un JSON con datos de clientes, un CSV de pedidos, etc.) sería público.
 - **Impacto:** dependiente del contenido. Para fotos públicas de comida es lo correcto. Para cualquier documento privado sería leak total.
-- **Remediación:** opciones:
-  1. **Mantener público** pero documentar que **nunca** debe subirse contenido sensible, y añadir un check en la UI de upload (`AdminMedia.tsx`) que rechace tipos `application/*` y `text/*`.
-  2. **Hacer el bucket privado** y servir las imágenes mediante signed URLs de larga duración cacheadas. Más overhead pero más seguro.
+- **Remediación aplicada:** Opción 1 (mantener público pero restringido). Verificación posterior reveló que el bucket ya tiene `allowed_mime_types = ['image/jpeg','image/png','image/webp','video/mp4','video/webm','video/quicktime']` configurado en migration `20260330201052_*.sql`. Supabase Storage rechaza al subir cualquier MIME fuera de esa lista — no es posible subir PDFs, CSVs ni documentos. Documentado en `CLAUDE.md` para no ampliar la lista en el futuro.
 - **Referencia:** CWE-200 (Exposure of Sensitive Information), CWE-732 (Incorrect Permission Assignment).
 
 ---

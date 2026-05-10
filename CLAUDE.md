@@ -10,6 +10,14 @@ Before starting any significant change (new feature, refactor, new dependency, r
 
 For security reviews, attack surface analysis, RLS audits, and Edge Function authorization checks, refer to [`SKILLS.md`](./SKILLS.md). It contains the cybersecurity agent's full context for this architecture — known risks, existing protections, remediation patterns, and a per-change security review workflow.
 
+### Storage bucket `media` — public read, never widen MIME allowlist
+
+The `media` bucket is configured `public = true` (so img/video URLs are servable directly without signed URLs) but its `allowed_mime_types` is restricted to `['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/webm', 'video/quicktime']`. Storage rejects any other type at upload time.
+
+**Do not widen this list** without a deliberate decision. If you ever need to upload PDFs, CSVs, or any document type, do it through a different (private) bucket — never through `media`. Adding `application/*` or `text/*` would let an admin accidentally publish sensitive content to the open internet.
+
+If a private bucket is added later, default it to `public = false` and serve via signed URLs.
+
 ### Pre-flight security checklist (MANDATORY before any change)
 
 Apply this list **before writing code**, not after. Past audits caught regressions where a vulnerability fixed in one file was reintroduced in a sibling file written later. The 2026-05-09 audit found, for example:
