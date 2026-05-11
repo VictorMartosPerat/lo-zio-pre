@@ -402,20 +402,51 @@ const Checkout = () => {
       // The order will be assigned in OrderConfirmation when payment_status flips to "paid".
       const isStripe = form.paymentMethod === "stripe";
 
-      // 1. Create order in Supabase. Select the full row back so we can pass
-      // it via router state to OrderConfirmation — guests have no SELECT policy
-      // on orders, so re-reading from the confirmation page would otherwise fail.
-      const { data: order, error: orderError } = await supabase
-        .from("orders")
-        .insert({
-          user_id: user?.id || null,
-          guest_name: form.name,
-          guest_email: form.email,
-          guest_phone: form.phone,
-          order_type: form.orderType,
-          pickup_store: assignedStore,
-          assigned_to: isStripe ? null : assignedTo,
-          delivery_address: form.orderType === "delivery"
+      // Derive user_id from a *valid* Supabase session, not the React `user`
+      // state. Two failure modes we have to guard against:
+      //   1. React state has a user but supabase-js has no session   → INSERT
+      //      would send user_id but auth.uid() = NULL → RLS 42501.
+      //   2. supabase-js has a session whose access token is expired → INSERT
+      //      sends the stale JWT as Authorization → gateway 401 before RLS.
+      // Force a refresh; if refresh fails, signOut so the next request goes
+      // out as a clean anon call with only the publishable key.
+      let userIdForInsert: string | null = null;
+      const { data: { session: existing } } = await supabase.auth.getSession();
+      if (existing) {
+        const { data: refreshed, error: refreshErr } = await supabase.auth.refreshSession();
+        if (refreshErr || !refreshed.session) {
+          await supabase.auth.signOut();
+        } else {
+          userIdForInsert = refreshed.session.user.id;
+        }
+      }
+
+      // 1. Create order in Supabase.
+      //
+      // We do NOT use .select() here: guests (anon) have no SELECT policy on
+      // orders, so PostgREST's RETURNING * after the INSERT trips RLS and the
+      // whole call fails with 42501 even though the row was written.
+      //
+      // Workaround: generate the order id client-side, INSERT without
+      // RETURNING, and reconstruct the order object locally for router state.
+      // OrderConfirmation only needs the columns we already know.
+      const orderId =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const createdAt = new Date().toISOString();
+
+      const orderRow = {
+        id: orderId,
+        user_id: userIdForInsert,
+        guest_name: form.name,
+        guest_email: form.email,
+        guest_phone: form.phone,
+        order_type: form.orderType,
+        pickup_store: assignedStore,
+        assigned_to: isStripe ? null : assignedTo,
+        delivery_address:
+          form.orderType === "delivery"
             ? [
                 form.address,
                 form.portal ? `Portal ${form.portal}` : null,
@@ -424,26 +455,29 @@ const Checkout = () => {
                 form.door ? `Puerta ${form.door}` : null,
               ].filter(Boolean).join(", ")
             : null,
-          delivery_city: form.orderType === "delivery" ? form.city : null,
-          delivery_postal_code: form.orderType === "delivery" ? form.postalCode : null,
-          payment_method: form.paymentMethod,
-          payment_status: "pending",
-          notes: [
+        delivery_city: form.orderType === "delivery" ? form.city : null,
+        delivery_postal_code: form.orderType === "delivery" ? form.postalCode : null,
+        payment_method: form.paymentMethod,
+        payment_status: "pending" as const,
+        notes:
+          [
             form.notes,
             form.orderType === "delivery" && form.deliveryNotes
               ? `🛵 Repartidor: ${form.deliveryNotes}`
               : null,
           ].filter(Boolean).join(" — ") || null,
-          total_amount: totalPrice,
-          scheduled_for: scheduledFor ? scheduledFor.toISOString() : null,
-        })
-        .select("*")
-        .single();
+        total_amount: totalPrice,
+        scheduled_for: scheduledFor ? scheduledFor.toISOString() : null,
+      };
 
+      const { error: orderError } = await supabase.from("orders").insert(orderRow);
       if (orderError) throw orderError;
 
-      // 2. Insert order items (including extras as part of description)
-      const orderItems = items.map((item) => {
+      const order = { ...orderRow, status: "pending", created_at: createdAt };
+
+      // 2. Insert order items. Same RETURNING/RLS issue applies — pre-generate
+      // ids client-side and skip .select().
+      const orderItemsForDb = items.map((item) => {
         const extrasList = (item.extras || [])
           .map((e) => `${e.emoji} ${e.label} ×${e.quantity}`)
           .join(", ");
@@ -454,7 +488,11 @@ const Checkout = () => {
           item.note ? `📝 ${item.note}` : null,
         ].filter(Boolean);
         return {
-          order_id: order.id,
+          id:
+            typeof crypto !== "undefined" && "randomUUID" in crypto
+              ? crypto.randomUUID()
+              : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          order_id: orderId,
           item_name: item.name,
           item_description: descParts.join(" — ") || null,
           quantity: item.quantity,
@@ -462,11 +500,11 @@ const Checkout = () => {
           total_price: item.price * item.quantity + extrasPrice,
         };
       });
-      const { data: insertedItems, error: itemsError } = await supabase
-        .from("order_items")
-        .insert(orderItems)
-        .select("*");
+
+      const { error: itemsError } = await supabase.from("order_items").insert(orderItemsForDb);
       if (itemsError) throw itemsError;
+
+      const insertedItems = orderItemsForDb;
 
       // NOTE: No email is sent on order creation.
       // Customer emails are sent only when the order is confirmed or cancelled,
@@ -1048,7 +1086,11 @@ const Checkout = () => {
                         {t("checkout.cashPayment")}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {t("checkout.cashPaymentDesc")}
+                        {t(
+                          form.orderType === "delivery"
+                            ? "checkout.cashPaymentDescDelivery"
+                            : "checkout.cashPaymentDescPickup",
+                        )}
                       </p>
                     </div>
                   </label>

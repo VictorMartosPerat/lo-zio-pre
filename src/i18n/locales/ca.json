@@ -198,7 +198,16 @@
     "pointsBalance": "punts",
     "pointsInfo": "Acumula punts amb cada comanda i bescanvia'ls per descomptes i productes gratis.",
     "pointsComingSoon": "Pròximament",
-    "pointsComingSoonDesc": "Estem preparant un programa de fidelització amb recompenses exclusives. Molt aviat podràs acumular punts!"
+    "pointsComingSoonDesc": "Estem preparant un programa de fidelització amb recompenses exclusives. Molt aviat podràs acumular punts!",
+    "changePassword": "Canviar contrasenya",
+    "currentPassword": "Contrasenya actual",
+    "newPassword": "Nova contrasenya",
+    "confirmPassword": "Confirmar nova contrasenya",
+    "passwordMismatch": "Les contrasenyes no coincideixen",
+    "passwordTooShort": "La contrasenya ha de tenir almenys 6 caràcters",
+    "passwordChanged": "Contrasenya actualitzada correctament!",
+    "passwordChangeError": "Error en canviar la contrasenya",
+    "changingPassword": "Canviant..."
   },
   "cart": {
     "title": "La Teva Comanda",
@@ -234,6 +243,8 @@
     "paymentMethod": "Mètode de pagament",
     "cashPayment": "Pagament en persona",
     "cashPaymentDesc": "Efectiu o targeta en recollir/rebre",
+    "cashPaymentDescPickup": "Efectiu o targeta en recollir",
+    "cashPaymentDescDelivery": "Efectiu en rebre",
     "onlinePayment": "Pagament online",
     "onlinePaymentDesc": "Targeta de crèdit/dèbit",
     "notesTitle": "Notes (opcional)",

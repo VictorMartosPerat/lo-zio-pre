@@ -198,7 +198,16 @@
     "pointsBalance": "punti",
     "pointsInfo": "Accumula punti con ogni ordine e riscattali per sconti e prodotti gratis.",
     "pointsComingSoon": "Prossimamente",
-    "pointsComingSoonDesc": "Stiamo preparando un programma fedeltà con premi esclusivi. Molto presto potrai accumulare punti!"
+    "pointsComingSoonDesc": "Stiamo preparando un programma fedeltà con premi esclusivi. Molto presto potrai accumulare punti!",
+    "changePassword": "Cambia password",
+    "currentPassword": "Password attuale",
+    "newPassword": "Nuova password",
+    "confirmPassword": "Conferma nuova password",
+    "passwordMismatch": "Le password non coincidono",
+    "passwordTooShort": "La password deve avere almeno 6 caratteri",
+    "passwordChanged": "Password aggiornata correttamente!",
+    "passwordChangeError": "Errore nel cambio della password",
+    "changingPassword": "Modifica in corso..."
   },
   "cart": {
     "title": "Il Tuo Ordine",
@@ -234,6 +243,8 @@
     "paymentMethod": "Metodo di pagamento",
     "cashPayment": "Pagamento di persona",
     "cashPaymentDesc": "Contanti o carta al ritiro/consegna",
+    "cashPaymentDescPickup": "Contanti o carta al ritiro",
+    "cashPaymentDescDelivery": "Contanti alla consegna",
     "onlinePayment": "Pagamento online",
     "onlinePaymentDesc": "Carta di credito/debito",
     "notesTitle": "Note (opzionale)",

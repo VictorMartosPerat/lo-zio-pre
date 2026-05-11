@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import OrderStatusAnimation from "@/components/OrderStatusAnimation";
 import { Button } from "@/components/ui/button";
 import {
   CheckCircle2,
@@ -28,6 +29,7 @@ interface Order {
   delivery_city: string | null;
   payment_method: string;
   payment_status: string;
+  status: string;
   total_amount: number;
   notes: string | null;
   created_at: string;
@@ -169,7 +171,7 @@ const OrderConfirmation = () => {
       <div className="pt-24 md:pt-28 pb-24 px-4">
         <div className="max-w-2xl mx-auto">
           {/* Success header */}
-          <div className="text-center mb-10">
+          <div className="text-center mb-6">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-menu-teal/10 mb-4 animate-fade-in-up">
               <CheckCircle2 className="w-10 h-10 text-menu-teal" />
             </div>
@@ -179,6 +181,11 @@ const OrderConfirmation = () => {
             <p className="text-muted-foreground font-body">
               {t("confirmation.subtitle")}
             </p>
+          </div>
+
+          {/* Live status animation (no-op while status='pending') */}
+          <div className="mb-6">
+            <OrderStatusAnimation status={order.status} orderType={order.order_type} />
           </div>
 
           {/* Logged-in / guest banner */}

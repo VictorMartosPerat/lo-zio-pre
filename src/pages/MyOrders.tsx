@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import OrderStatusAnimation from "@/components/OrderStatusAnimation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -56,21 +57,6 @@ const PROGRESS_STEPS = [
   { key: "delivered", label: "Entregado" },
 ];
 
-const STATUS_GIFS: Partial<Record<string, { src: string; alt: string }>> = {
-  confirmed: {
-    src: "https://media3.giphy.com/media/Jz4ijKk1eoIKvPqNq0/giphy.gif",
-    alt: "Italiano con el pulgar hacia arriba",
-  },
-  preparing: {
-    src: "https://media1.giphy.com/media/oVoDApNKaiHCsXOCPT/giphy.gif",
-    alt: "Abriendo la masa de pizza",
-  },
-  ready: {
-    src: "https://media3.giphy.com/media/3ohjV4TqA25cn3HnK8/giphy.gif",
-    alt: "Pizza en moto de reparto",
-  },
-};
-
 const STATUS_LABELS: Record<string, string> = {
   pending:   "Recibido",
   confirmed: "Confirmado",
@@ -78,6 +64,19 @@ const STATUS_LABELS: Record<string, string> = {
   ready:     "Listo para recoger",
   delivered: "Entregado",
   cancelled: "Cancelado",
+};
+
+const getStatusLabel = (status: string, orderType: string) => {
+  if (status === "ready"     && orderType === "delivery") return "En camino";
+  if (status === "delivered" && orderType === "delivery") return "Entregado";
+  return STATUS_LABELS[status] ?? status;
+};
+
+const getStepLabel = (key: string, orderType: string) => {
+  if (orderType === "delivery") {
+    if (key === "ready") return "En camino";
+  }
+  return PROGRESS_STEPS.find((s) => s.key === key)?.label ?? key;
 };
 
 const STORE_NAMES: Record<string, string> = {
@@ -232,7 +231,7 @@ const MyOrders = () => {
                                 : "bg-orange-100 text-orange-800 border-orange-200"
                             }`}
                           >
-                            {STATUS_LABELS[order.status] ?? order.status}
+                            {getStatusLabel(order.status, order.order_type)}
                           </Badge>
                           <Badge
                             className={`text-[10px] border ${PAYMENT_STATUS_STYLES[order.payment_status]}`}
@@ -267,13 +266,12 @@ const MyOrders = () => {
                       </div>
                     </div>
 
-                    {/* Status GIF */}
-                    {!cancelled && STATUS_GIFS[order.status] && (
-                      <div className="mt-4 flex justify-center">
-                        <img
-                          src={STATUS_GIFS[order.status]!.src}
-                          alt={STATUS_GIFS[order.status]!.alt}
-                          className="h-28 rounded-xl object-cover"
+                    {/* Status animation */}
+                    {!cancelled && (
+                      <div className="mt-4">
+                        <OrderStatusAnimation
+                          status={order.status}
+                          orderType={order.order_type}
                         />
                       </div>
                     )}
@@ -300,7 +298,7 @@ const MyOrders = () => {
                                       done ? "text-menu-teal font-semibold" : "text-muted-foreground"
                                     }`}
                                   >
-                                    {s.label}
+                                    {getStepLabel(s.key, order.order_type)}
                                   </span>
                                 </div>
                                 {!isLast && (

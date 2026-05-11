@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { locationsData } from "@/lib/locations";
+import { telHref } from "@/lib/validators";
 import { toast } from "sonner";
 import { format, isToday } from "date-fns";
 import { es } from "date-fns/locale";
@@ -471,7 +472,7 @@ const OrderCard = ({
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <Phone className="w-3.5 h-3.5 shrink-0" />
-              <a href={/^[+\d\s\-().]{1,20}$/.test(order.guest_phone) ? `tel:${order.guest_phone}` : '#'} className="hover:text-foreground">
+              <a href={telHref(order.guest_phone)} className="hover:text-foreground">
                 {order.guest_phone}
               </a>
             </div>
@@ -585,7 +586,7 @@ const OrderCard = ({
                 )}
 
                 <a
-                  href={/^[+\d\s\-().]{1,20}$/.test(order.guest_phone) ? `tel:${order.guest_phone}` : '#'}
+                  href={telHref(order.guest_phone)}
                   className="flex items-center gap-2 w-full justify-center rounded-lg border border-border bg-muted/50 hover:bg-muted px-4 py-3 text-sm font-semibold text-foreground transition-colors"
                 >
                   <PhoneCall className="w-4 h-4 text-menu-teal" />

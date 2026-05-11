@@ -243,6 +243,8 @@
     "paymentMethod": "Método de pago",
     "cashPayment": "Pago en persona",
     "cashPaymentDesc": "Efectivo o tarjeta al recoger/recibir",
+    "cashPaymentDescPickup": "Efectivo o tarjeta al recoger",
+    "cashPaymentDescDelivery": "Efectivo al recibir",
     "onlinePayment": "Pago online",
     "onlinePaymentDesc": "Tarjeta de crédito/débito",
     "notesTitle": "Notas (opcional)",

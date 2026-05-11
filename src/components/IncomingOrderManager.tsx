@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Bell, Truck, Store, Phone, User, Minus, Plus, Check, Repeat, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { telHref } from "@/lib/validators";
 import { usePizzeriaRole, type PizzeriaSlug } from "@/hooks/usePizzeriaRole";
 import { useDoorbellAlarm } from "@/hooks/useDoorbellAlarm";
 import { Button } from "@/components/ui/button";
@@ -305,76 +306,71 @@ const IncomingOrderManager = () => {
             )}
           </div>
 
-          <div className="p-5 space-y-4 max-h-[65vh] overflow-y-auto">
-            {/* Customer */}
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-2 text-sm">
-                <User className="h-4 w-4 text-muted-foreground" />
-                <span className="font-semibold">{current.guest_name}</span>
+          {/* Compact header: customer, phone, type — always visible, no scroll */}
+          <div className="px-4 pt-3 pb-2 space-y-1.5 border-b border-border/40">
+            <div className="flex items-center justify-between gap-2 text-sm">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <User className="h-4 w-4 text-muted-foreground shrink-0" />
+                <span className="font-semibold truncate">{current.guest_name}</span>
               </div>
               <a
-                href={/^[+\d\s\-().]{1,20}$/.test(current.guest_phone) ? `tel:${current.guest_phone}` : '#'}
-                className="flex items-center gap-2 text-sm text-primary"
+                href={telHref(current.guest_phone)}
+                className="flex items-center gap-1 text-sm text-primary shrink-0"
               >
                 <Phone className="h-4 w-4" />
-                {current.guest_phone}
+                <span className="tabular-nums">{current.guest_phone}</span>
               </a>
             </div>
+            {current.order_type === "delivery" ? (
+              <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                <Truck className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                <span className="leading-tight">
+                  <span className="font-medium text-foreground">{t("incomingOrder.delivery")}</span>
+                  {current.delivery_address && (
+                    <> — {current.delivery_address}{current.delivery_city ? `, ${current.delivery_city}` : ""}</>
+                  )}
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 text-xs">
+                <Store className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="font-medium">{t("incomingOrder.pickup")}</span>
+              </div>
+            )}
+          </div>
 
-            {/* Order type */}
-            <div className="bg-muted/50 rounded-lg p-3 text-sm">
-              {current.order_type === "delivery" ? (
-                <div className="flex items-start gap-2">
-                  <Truck className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
-                  <div>
-                    <div className="font-medium">{t("incomingOrder.delivery")}</div>
-                    {current.delivery_address && (
-                      <div className="text-muted-foreground text-xs mt-0.5">
-                        {current.delivery_address}
-                        {current.delivery_city ? `, ${current.delivery_city}` : ""}
-                      </div>
+          {/* Items — prioritized: gets the bulk of the scrollable space */}
+          <div className="px-4 py-3 max-h-[40vh] sm:max-h-[45vh] overflow-y-auto">
+            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+              {t("incomingOrder.items")}
+            </div>
+            <ul className="space-y-2">
+              {items.map((it) => (
+                <li key={it.id} className="flex justify-between gap-3 text-sm border-b border-border/50 pb-2 last:border-0">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium">
+                      {it.quantity}× {it.item_name}
+                    </div>
+                    {it.item_description && (
+                      <div className="text-xs text-muted-foreground mt-0.5">{it.item_description}</div>
                     )}
                   </div>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Store className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">{t("incomingOrder.pickup")}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Items */}
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
-                {t("incomingOrder.items")}
+                  <div className="font-semibold tabular-nums shrink-0">
+                    {it.total_price.toFixed(2)}€
+                  </div>
+                </li>
+              ))}
+            </ul>
+            {current.notes && (
+              <div className="mt-3 text-xs italic text-muted-foreground border-l-2 border-primary pl-2">
+                {current.notes}
               </div>
-              <ul className="space-y-2">
-                {items.map((it) => (
-                  <li key={it.id} className="flex justify-between gap-3 text-sm border-b border-border/50 pb-2 last:border-0">
-                    <div className="flex-1">
-                      <div className="font-medium">
-                        {it.quantity}× {it.item_name}
-                      </div>
-                      {it.item_description && (
-                        <div className="text-xs text-muted-foreground mt-0.5">{it.item_description}</div>
-                      )}
-                    </div>
-                    <div className="font-semibold tabular-nums shrink-0">
-                      {it.total_price.toFixed(2)}€
-                    </div>
-                  </li>
-                ))}
-              </ul>
-              {current.notes && (
-                <div className="mt-3 text-xs italic text-muted-foreground border-l-2 border-primary pl-2">
-                  {current.notes}
-                </div>
-              )}
-            </div>
+            )}
+          </div>
 
-            {/* Total */}
-            <div className="flex justify-between items-baseline border-t border-border pt-3">
+          {/* Total + estimated time — pinned, never scrolled away */}
+          <div className="px-4 py-3 border-t border-border bg-muted/30 space-y-3">
+            <div className="flex justify-between items-baseline">
               <span className="text-sm uppercase tracking-wide text-muted-foreground">
                 {t("incomingOrder.total")}
               </span>
@@ -382,10 +378,8 @@ const IncomingOrderManager = () => {
                 {Number(current.total_amount).toFixed(2)}€
               </span>
             </div>
-
-            {/* Estimated time selector */}
-            <div className="bg-muted/50 rounded-lg p-3">
-              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
                 {t("incomingOrder.estimatedTime")}
               </div>
               <div className="flex items-center justify-between gap-3">
@@ -393,14 +387,14 @@ const IncomingOrderManager = () => {
                   type="button"
                   variant="outline"
                   size="icon"
-                  className="h-12 w-12"
+                  className="h-10 w-10 sm:h-12 sm:w-12"
                   onClick={() => setEstimatedTime((v) => Math.max(TIME_MIN, v - TIME_STEP))}
                   disabled={estimatedTime <= TIME_MIN || busy}
                   aria-label="-15"
                 >
                   <Minus className="h-5 w-5" />
                 </Button>
-                <div className="text-3xl font-bold tabular-nums">
+                <div className="text-2xl sm:text-3xl font-bold tabular-nums">
                   {estimatedTime}
                   <span className="text-sm font-normal text-muted-foreground ml-1">
                     {t("incomingOrder.minutes")}
@@ -410,7 +404,7 @@ const IncomingOrderManager = () => {
                   type="button"
                   variant="outline"
                   size="icon"
-                  className="h-12 w-12"
+                  className="h-10 w-10 sm:h-12 sm:w-12"
                   onClick={() => setEstimatedTime((v) => Math.min(TIME_MAX, v + TIME_STEP))}
                   disabled={estimatedTime >= TIME_MAX || busy}
                   aria-label="+15"
@@ -437,16 +431,17 @@ const IncomingOrderManager = () => {
                 onClick={handleTransfer}
                 disabled={busy}
                 variant="secondary"
-                className="min-h-[56px] text-sm"
+                className="min-h-[56px] px-2 text-xs sm:text-sm leading-tight whitespace-normal"
               >
                 <Repeat className="h-4 w-4" />
-                {t(transferKey)}
+                <span className="hidden sm:inline">{t(transferKey)}</span>
+                <span className="sm:hidden">→ {otherLabel}</span>
               </Button>
               <Button
                 onClick={() => setShowRejectConfirm(true)}
                 disabled={busy}
                 variant="destructive"
-                className="min-h-[56px] text-sm"
+                className="min-h-[56px] px-2 text-xs sm:text-sm leading-tight whitespace-normal"
               >
                 <X className="h-4 w-4" />
                 {t("incomingOrder.reject")}

@@ -198,7 +198,16 @@
     "pointsBalance": "points",
     "pointsInfo": "Earn points with every order and redeem them for discounts and free products.",
     "pointsComingSoon": "Coming Soon",
-    "pointsComingSoonDesc": "We're preparing an exclusive loyalty program with rewards. You'll be able to earn points very soon!"
+    "pointsComingSoonDesc": "We're preparing an exclusive loyalty program with rewards. You'll be able to earn points very soon!",
+    "changePassword": "Change password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
+    "passwordMismatch": "Passwords don't match",
+    "passwordTooShort": "Password must be at least 6 characters",
+    "passwordChanged": "Password updated successfully!",
+    "passwordChangeError": "Failed to change password",
+    "changingPassword": "Changing..."
   },
   "cart": {
     "title": "Your Order",
@@ -234,6 +243,8 @@
     "paymentMethod": "Payment method",
     "cashPayment": "Pay in person",
     "cashPaymentDesc": "Cash or card on pickup/delivery",
+    "cashPaymentDescPickup": "Cash or card on pickup",
+    "cashPaymentDescDelivery": "Cash on delivery",
     "onlinePayment": "Pay online",
     "onlinePaymentDesc": "Credit/debit card",
     "notesTitle": "Notes (optional)",
