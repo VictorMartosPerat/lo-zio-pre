@@ -167,15 +167,61 @@ const AdminOrders = () => {
     );
   }
 
+  const sendOrderStatusEmail = async (
+    order: Order,
+    status: "confirmed" | "cancelled",
+    extras: { estimatedMinutes?: number; rejectionReason?: string; refunded?: boolean } = {},
+  ) => {
+    if (!order.guest_email) return;
+    try {
+      const minutes = extras.estimatedMinutes ?? 45;
+      let readyTime: string | undefined;
+      if (status === "confirmed") {
+        const ready = new Date(Date.now() + minutes * 60_000);
+        readyTime = `${String(ready.getHours()).padStart(2, "0")}:${String(ready.getMinutes()).padStart(2, "0")}`;
+      }
+      await supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "order-status-update",
+          recipientEmail: order.guest_email,
+          idempotencyKey: `order-status-${order.id}-${status}`,
+          templateData: {
+            guestName: order.guest_name,
+            shortId: String(order.id).slice(0, 8).toUpperCase(),
+            totalAmount: Number(order.total_amount) || 0,
+            status,
+            estimatedMinutes: minutes,
+            readyTime,
+            rejectionReason: extras.rejectionReason,
+            pickupStore: order.pickup_store ?? null,
+            refunded: extras.refunded ?? false,
+          },
+        },
+      });
+    } catch (e) {
+      console.error("send-transactional-email failed", e);
+    }
+  };
+
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     setUpdatingId(orderId);
-    const { error } = await supabase.from("orders").update({ status: newStatus }).eq("id", orderId);
+    const updates: Record<string, unknown> = { status: newStatus };
+    if (newStatus === "confirmed") {
+      updates.accepted_at = new Date().toISOString();
+    }
+    const { error } = await supabase.from("orders").update(updates).eq("id", orderId);
 
     if (error) {
       toast.error("Error al actualizar el estado");
     } else {
       setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o)));
       toast.success("Estado actualizado");
+      if (newStatus === "confirmed" || newStatus === "cancelled") {
+        const order = orders.find((o) => o.id === orderId);
+        if (order) {
+          void sendOrderStatusEmail(order, newStatus as "confirmed" | "cancelled");
+        }
+      }
     }
     setUpdatingId(null);
   };
