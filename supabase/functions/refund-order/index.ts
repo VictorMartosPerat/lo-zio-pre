@@ -73,6 +73,14 @@ serve(async (req) => {
 
     await supabase.from("orders").update({ payment_status: "refunded" }).eq("id", orderId);
 
+    // R-DISC-006: refund unconditionally restores discount eligibility. The
+    // validation RPC will still reject expired discounts at next use.
+    await supabase
+      .from("discount_redemptions")
+      .update({ cancelled_at: new Date().toISOString() })
+      .eq("order_id", orderId)
+      .is("cancelled_at", null);
+
     return new Response(
       JSON.stringify({ success: true, refundId: refund.id }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
