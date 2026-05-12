@@ -255,6 +255,10 @@ const AdminOrders = () => {
         ),
       );
       toast.success("Pedido cancelado");
+      void sendOrderStatusEmail(order, "cancelled", {
+        refunded: order.payment_status === "paid",
+        rejectionReason: "Pedido cancelado por el restaurante",
+      });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Error desconocido";
       toast.error(`Error al cancelar: ${msg}`);
