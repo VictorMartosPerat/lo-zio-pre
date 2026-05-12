@@ -1348,11 +1348,23 @@ const Checkout = () => {
                   })}
                 </div>
 
-                <div className="px-5 py-4 border-t border-border bg-muted/30">
+                <div className="px-5 py-4 border-t border-border bg-muted/30 space-y-1.5">
+                  {discount.applied && (
+                    <>
+                      <div className="flex justify-between items-center text-sm font-body text-muted-foreground">
+                        <span>{t("checkout.discount.subtotal")}</span>
+                        <span>{totalPrice.toFixed(2)} €</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm font-body text-menu-teal">
+                        <span>{discount.applied.code}</span>
+                        <span>−{discount.applied.discount_amount.toFixed(2)} €</span>
+                      </div>
+                    </>
+                  )}
                   <div className="flex justify-between items-center">
                     <span className="font-display font-bold text-base">{t("cart.total")}</span>
                     <span className="font-display text-2xl font-bold text-menu-teal">
-                      {totalPrice.toFixed(2)} €
+                      {finalTotal.toFixed(2)} €
                     </span>
                   </div>
                 </div>
