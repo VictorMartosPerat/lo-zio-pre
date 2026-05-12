@@ -186,6 +186,15 @@ const Checkout = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const lang = i18n.language;
+
+  // Discount support (R-DISC-*). Auto-applies the user's best assigned coupon
+  // and lets them enter a manual code. Server is authoritative — these are
+  // preview numbers only; the trigger recomputes on INSERT.
+  const discount = useDiscount({ subtotal: totalPrice, enabled: !!user });
+  const discountAmount = discount.applied?.discount_amount ?? 0;
+  const finalTotal = Math.max(0, totalPrice - discountAmount);
+  const [manualOpen, setManualOpen] = useState(false);
+
   // Stripe payment step state
   const [stripeStep, setStripeStep] = useState<{
     orderId: string;
