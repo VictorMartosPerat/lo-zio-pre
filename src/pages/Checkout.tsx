@@ -479,9 +479,19 @@ const Checkout = () => {
               ? `🛵 Repartidor: ${form.deliveryNotes}`
               : null,
           ].filter(Boolean).join(" — ") || null,
-        total_amount: totalPrice,
+        total_amount: finalTotal,
+        subtotal_amount: totalPrice,
+        discount_id: discount.applied ? discount.applied.discount_id : null,
+        discount_amount: discountAmount,
         scheduled_for: scheduledFor ? scheduledFor.toISOString() : null,
       };
+
+      // Discounts require auth — guard at the client too (server enforces).
+      if (orderRow.discount_id && !userIdForInsert) {
+        toast.error(t("checkout.discount.errors.not_logged_in"));
+        setLoading(false);
+        return;
+      }
 
       const { error: orderError } = await supabase.from("orders").insert(orderRow);
       if (orderError) throw orderError;
