@@ -207,7 +207,13 @@
     "passwordTooShort": "La password deve avere almeno 6 caratteri",
     "passwordChanged": "Password aggiornata correttamente!",
     "passwordChangeError": "Errore nel cambio della password",
-    "changingPassword": "Modifica in corso..."
+    "changingPassword": "Modifica in corso...",
+    "discounts": {
+      "title": "I miei coupon",
+      "useNow": "Usa ora",
+      "expires": "Scade il {{date}}",
+      "min": "Min. {{amount}} €"
+    }
   },
   "cart": {
     "title": "Il Tuo Ordine",
@@ -294,7 +300,28 @@
     "stripeSecure": "Pagamento sicuro gestito da Stripe",
     "stripeNotLoaded": "Sistema di pagamento non disponibile. Ricarica la pagina.",
     "stripeError": "Errore nel pagamento. Controlla i dati della tua carta.",
-    "addressSuggestionHint": "Suggerimento orientativo — verifica l'indirizzo prima di confermare"
+    "addressSuggestionHint": "Suggerimento orientativo — verifica l'indirizzo prima di confermare",
+    "discount": {
+      "title": "Hai un codice sconto?",
+      "haveCode": "Applica un codice",
+      "placeholder": "Codice",
+      "apply": "Applica",
+      "remove": "Rimuovi",
+      "appliedAuto": "Applicato automaticamente",
+      "appliedManual": "Applicato",
+      "subtotal": "Subtotale",
+      "errors": {
+        "not_logged_in": "Accedi per usare gli sconti.",
+        "unknown_code": "Codice non valido.",
+        "inactive": "Questo sconto è disattivato.",
+        "expired": "Questo sconto è scaduto.",
+        "usage_limit_reached": "Nessun utilizzo disponibile.",
+        "min_order_not_met": "Subtotale inferiore al minimo.",
+        "already_used": "Hai già usato questo sconto.",
+        "not_assigned": "Questo sconto non è disponibile per il tuo account.",
+        "rate_limited": "Troppi tentativi. Attendi un minuto."
+      }
+    }
   },
   "admin": {
     "title": "Pannello di Amministrazione",

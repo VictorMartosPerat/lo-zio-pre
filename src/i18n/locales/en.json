@@ -207,7 +207,13 @@
     "passwordTooShort": "Password must be at least 6 characters",
     "passwordChanged": "Password updated successfully!",
     "passwordChangeError": "Failed to change password",
-    "changingPassword": "Changing..."
+    "changingPassword": "Changing...",
+    "discounts": {
+      "title": "My coupons",
+      "useNow": "Use now",
+      "expires": "Expires {{date}}",
+      "min": "Min. {{amount}} €"
+    }
   },
   "cart": {
     "title": "Your Order",
@@ -294,7 +300,28 @@
     "stripeSecure": "Secure payment managed by Stripe",
     "stripeNotLoaded": "Payment system unavailable. Please reload the page.",
     "stripeError": "Payment error. Please check your card details.",
-    "addressSuggestionHint": "Suggested address — please verify before confirming"
+    "addressSuggestionHint": "Suggested address — please verify before confirming",
+    "discount": {
+      "title": "Have a discount code?",
+      "haveCode": "Apply a code",
+      "placeholder": "Code",
+      "apply": "Apply",
+      "remove": "Remove",
+      "appliedAuto": "Applied automatically",
+      "appliedManual": "Applied",
+      "subtotal": "Subtotal",
+      "errors": {
+        "not_logged_in": "Sign in to use discounts.",
+        "unknown_code": "Invalid code.",
+        "inactive": "This discount is disabled.",
+        "expired": "This discount has expired.",
+        "usage_limit_reached": "No uses left for this discount.",
+        "min_order_not_met": "Order subtotal is below the minimum.",
+        "already_used": "You have already used this discount.",
+        "not_assigned": "This discount is not available for your account.",
+        "rate_limited": "Too many attempts. Wait a minute."
+      }
+    }
   },
   "admin": {
     "title": "Admin Panel",

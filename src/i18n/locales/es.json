@@ -207,7 +207,13 @@
     "passwordTooShort": "La contraseña debe tener al menos 6 caracteres",
     "passwordChanged": "¡Contraseña actualizada correctamente!",
     "passwordChangeError": "Error al cambiar la contraseña",
-    "changingPassword": "Cambiando..."
+    "changingPassword": "Cambiando...",
+    "discounts": {
+      "title": "Mis cupones",
+      "useNow": "Usar ahora",
+      "expires": "Caduca {{date}}",
+      "min": "Mín. {{amount}} €"
+    }
   },
   "cart": {
     "title": "Tu Pedido",
@@ -294,7 +300,28 @@
     "stripeSecure": "Pago seguro gestionado por Stripe",
     "stripeNotLoaded": "El sistema de pago no está disponible. Recarga la página.",
     "stripeError": "Error en el pago. Revisa los datos de tu tarjeta.",
-    "addressSuggestionHint": "Sugerencia orientativa — verifica la dirección antes de confirmar"
+    "addressSuggestionHint": "Sugerencia orientativa — verifica la dirección antes de confirmar",
+    "discount": {
+      "title": "¿Tienes un código de descuento?",
+      "haveCode": "Aplicar un código",
+      "placeholder": "Código",
+      "apply": "Aplicar",
+      "remove": "Quitar",
+      "appliedAuto": "Aplicado automáticamente",
+      "appliedManual": "Aplicado",
+      "subtotal": "Subtotal",
+      "errors": {
+        "not_logged_in": "Inicia sesión para usar descuentos.",
+        "unknown_code": "Código no válido.",
+        "inactive": "Este descuento está desactivado.",
+        "expired": "Este descuento ha caducado.",
+        "usage_limit_reached": "Este descuento ya no tiene usos disponibles.",
+        "min_order_not_met": "No alcanzas el mínimo de pedido.",
+        "already_used": "Ya has usado este descuento.",
+        "not_assigned": "Este descuento no está disponible para tu cuenta.",
+        "rate_limited": "Demasiados intentos. Espera un minuto."
+      }
+    }
   },
   "admin": {
     "title": "Panel de Administración",
