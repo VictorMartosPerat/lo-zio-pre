@@ -597,7 +597,7 @@ const Checkout = () => {
               {t("checkout.payment")}
             </h1>
             <p className="text-muted-foreground font-body mb-8">
-              Total: <span className="font-bold text-foreground">{totalPrice.toFixed(2)} €</span>
+              Total: <span className="font-bold text-foreground">{finalTotal.toFixed(2)} €</span>
             </p>
 
             <Elements
