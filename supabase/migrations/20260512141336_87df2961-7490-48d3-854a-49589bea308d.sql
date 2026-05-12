@@ -1,0 +1,1 @@
+UPDATE public.orders SET pickup_store = 'arrabassada' WHERE id IN ('2a7695b7-945b-438c-8dce-9f7e9617208c','7782b57e-3afb-41fa-af0f-c58bcecd6868','90b417b8-7da1-45fa-afa2-63b3c1ce8615');
