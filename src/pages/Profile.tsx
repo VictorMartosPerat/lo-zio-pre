@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
+import { MyDiscountsSection } from "@/components/MyDiscountsSection";
 import { EU_ALLERGENS } from "@/lib/allergens";
 
 const Profile = () => {
