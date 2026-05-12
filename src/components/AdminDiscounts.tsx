@@ -86,7 +86,7 @@ const AdminDiscounts = () => {
     }
     setDiscounts((data as Discount[]) || []);
     // redemption counts
-    const ids = (data || []).map((d: Discount) => d.id);
+    const ids = (data || []).map((d) => d.id);
     if (ids.length) {
       const { data: rd } = await supabase
         .from("discount_redemptions")
