@@ -22,7 +22,10 @@ import {
   Clock,
   Phone,
   User,
+  Tag,
+  X,
 } from "lucide-react";
+import { useDiscount, type DiscountReason } from "@/hooks/useDiscount";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { locationsData } from "@/lib/locations";
 import { getNearestStore } from "@/lib/nearestStore";
