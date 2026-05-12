@@ -14,7 +14,6 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
 import { extraCategories } from "@/lib/extras";
 import { ALL_UPSELL, UPSELL_IDS, type UpsellItem } from "@/lib/upsell";
 
@@ -145,18 +144,13 @@ const CartDrawer = () => {
   } = useCart();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { user } = useAuth();
 
   const [openNotes, setOpenNotes] = useState<Record<string, boolean>>({});
   const [showExtras, setShowExtras] = useState<Record<string, boolean>>({});
 
   const handleCheckout = () => {
     setIsOpen(false);
-    if (!user) {
-      navigate("/auth", { state: { fromCart: true } });
-    } else {
-      navigate("/pedido");
-    }
+    navigate("/pedido");
   };
 
   const foodItems = items.filter((i) => !UPSELL_IDS.includes(i.id));
