@@ -1165,6 +1165,77 @@ const Checkout = () => {
                 />
               </div>
 
+
+              {/* Discount / coupon */}
+              {user && (
+                <div className="bg-card rounded-xl p-6 border border-border">
+                  <h2 className="font-display text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+                    <Tag className="w-5 h-5" /> {t("checkout.discount.title")}
+                  </h2>
+                  {discount.applied ? (
+                    <div className="flex items-start justify-between gap-3 bg-menu-teal/10 border border-menu-teal/30 rounded-lg p-4">
+                      <div className="min-w-0">
+                        <div className="font-display font-bold text-menu-teal">
+                          {discount.applied.code} · −{discount.applied.discount_amount.toFixed(2)} €
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {discount.applied.manual
+                            ? t("checkout.discount.appliedManual")
+                            : t("checkout.discount.appliedAuto")}
+                          {discount.applied.description ? ` · ${discount.applied.description}` : ""}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          discount.clear();
+                          setManualOpen(true);
+                        }}
+                        className="text-muted-foreground hover:text-foreground p-1"
+                        aria-label={t("checkout.discount.remove")}
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {!manualOpen ? (
+                        <button
+                          type="button"
+                          onClick={() => setManualOpen(true)}
+                          className="text-sm text-menu-teal underline font-body"
+                        >
+                          {t("checkout.discount.haveCode")}
+                        </button>
+                      ) : (
+                        <>
+                          <div className="flex gap-2">
+                            <Input
+                              value={discount.code}
+                              onChange={(e) => discount.setCode(e.target.value.toUpperCase())}
+                              placeholder={t("checkout.discount.placeholder")}
+                              maxLength={40}
+                            />
+                            <Button
+                              type="button"
+                              onClick={() => discount.apply(discount.code)}
+                              disabled={discount.loading || !discount.code.trim()}
+                            >
+                              {discount.loading ? "…" : t("checkout.discount.apply")}
+                            </Button>
+                          </div>
+                          {discount.error && (
+                            <p className="text-sm text-destructive font-body">
+                              {t(`checkout.discount.errors.${discount.error as DiscountReason}`)}
+                            </p>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <Button
                 type="submit"
                 disabled={loading}
@@ -1172,7 +1243,7 @@ const Checkout = () => {
               >
                 {loading
                   ? t("checkout.processing")
-                  : `${t("checkout.confirmOrder")} · ${totalPrice.toFixed(2)} €`}
+                  : `${t("checkout.confirmOrder")} · ${finalTotal.toFixed(2)} €`}
               </Button>
             </form>
 
