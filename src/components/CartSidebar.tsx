@@ -3,7 +3,6 @@ import { Minus, Plus, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
 import { ALL_UPSELL, UPSELL_IDS, type UpsellItem } from "@/lib/upsell";
 
 const UpsellCard = ({
@@ -76,14 +75,12 @@ const CartSidebar = () => {
   const { items, updateQuantity, removeItem, addItem, totalPrice, totalItems } = useCart();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { user } = useAuth();
 
   const foodItems = items.filter((i) => !UPSELL_IDS.includes(i.id));
   const getQty = (id: string) => items.find((i) => i.id === id)?.quantity ?? 0;
 
   const handleCheckout = () => {
-    if (!user) navigate("/auth", { state: { fromCart: true } });
-    else navigate("/pedido");
+    navigate("/pedido");
   };
 
   return (

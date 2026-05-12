@@ -252,7 +252,7 @@ const Auth = () => {
             {isLogin && (
               <button
                 type="button"
-                onClick={() => navigate('/')}
+                onClick={() => navigate(fromCart ? '/pedido' : '/')}
                 className="text-muted-foreground font-body text-xs hover:text-foreground hover:underline transition-colors block mx-auto"
               >
                 {t('auth.continueAsGuest')}

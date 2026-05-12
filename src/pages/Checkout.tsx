@@ -459,6 +459,7 @@ const Checkout = () => {
         delivery_postal_code: form.orderType === "delivery" ? form.postalCode : null,
         payment_method: form.paymentMethod,
         payment_status: "pending" as const,
+        status: "pending" as const,
         notes:
           [
             form.notes,
@@ -473,7 +474,7 @@ const Checkout = () => {
       const { error: orderError } = await supabase.from("orders").insert(orderRow);
       if (orderError) throw orderError;
 
-      const order = { ...orderRow, status: "pending", created_at: createdAt };
+      const order = { ...orderRow, created_at: createdAt };
 
       // 2. Insert order items. Same RETURNING/RLS issue applies — pre-generate
       // ids client-side and skip .select().
