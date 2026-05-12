@@ -609,7 +609,7 @@ const Checkout = () => {
             >
               <StripePaymentForm
                 orderId={stripeStep.orderId}
-                totalPrice={totalPrice}
+                totalPrice={finalTotal}
                 customer={{ name: form.name, email: form.email, phone: form.phone }}
                 onBack={() => setStripeStep(null)}
                 onSuccess={(data) => {
