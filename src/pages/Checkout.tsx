@@ -22,7 +22,10 @@ import {
   Clock,
   Phone,
   User,
+  Tag,
+  X,
 } from "lucide-react";
+import { useDiscount, type DiscountReason } from "@/hooks/useDiscount";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { locationsData } from "@/lib/locations";
 import { getNearestStore } from "@/lib/nearestStore";
@@ -183,6 +186,15 @@ const Checkout = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const lang = i18n.language;
+
+  // Discount support (R-DISC-*). Auto-applies the user's best assigned coupon
+  // and lets them enter a manual code. Server is authoritative — these are
+  // preview numbers only; the trigger recomputes on INSERT.
+  const discount = useDiscount({ subtotal: totalPrice, enabled: !!user });
+  const discountAmount = discount.applied?.discount_amount ?? 0;
+  const finalTotal = Math.max(0, totalPrice - discountAmount);
+  const [manualOpen, setManualOpen] = useState(false);
+
   // Stripe payment step state
   const [stripeStep, setStripeStep] = useState<{
     orderId: string;
@@ -467,9 +479,19 @@ const Checkout = () => {
               ? `🛵 Repartidor: ${form.deliveryNotes}`
               : null,
           ].filter(Boolean).join(" — ") || null,
-        total_amount: totalPrice,
+        total_amount: finalTotal,
+        subtotal_amount: totalPrice,
+        discount_id: discount.applied ? discount.applied.discount_id : null,
+        discount_amount: discountAmount,
         scheduled_for: scheduledFor ? scheduledFor.toISOString() : null,
       };
+
+      // Discounts require auth — guard at the client too (server enforces).
+      if (orderRow.discount_id && !userIdForInsert) {
+        toast.error(t("checkout.discount.errors.not_logged_in"));
+        setLoading(false);
+        return;
+      }
 
       const { error: orderError } = await supabase.from("orders").insert(orderRow);
       if (orderError) throw orderError;
@@ -575,7 +597,7 @@ const Checkout = () => {
               {t("checkout.payment")}
             </h1>
             <p className="text-muted-foreground font-body mb-8">
-              Total: <span className="font-bold text-foreground">{totalPrice.toFixed(2)} €</span>
+              Total: <span className="font-bold text-foreground">{finalTotal.toFixed(2)} €</span>
             </p>
 
             <Elements
@@ -587,7 +609,7 @@ const Checkout = () => {
             >
               <StripePaymentForm
                 orderId={stripeStep.orderId}
-                totalPrice={totalPrice}
+                totalPrice={finalTotal}
                 customer={{ name: form.name, email: form.email, phone: form.phone }}
                 onBack={() => setStripeStep(null)}
                 onSuccess={(data) => {
@@ -1143,6 +1165,77 @@ const Checkout = () => {
                 />
               </div>
 
+
+              {/* Discount / coupon */}
+              {user && (
+                <div className="bg-card rounded-xl p-6 border border-border">
+                  <h2 className="font-display text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+                    <Tag className="w-5 h-5" /> {t("checkout.discount.title")}
+                  </h2>
+                  {discount.applied ? (
+                    <div className="flex items-start justify-between gap-3 bg-menu-teal/10 border border-menu-teal/30 rounded-lg p-4">
+                      <div className="min-w-0">
+                        <div className="font-display font-bold text-menu-teal">
+                          {discount.applied.code} · −{discount.applied.discount_amount.toFixed(2)} €
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {discount.applied.manual
+                            ? t("checkout.discount.appliedManual")
+                            : t("checkout.discount.appliedAuto")}
+                          {discount.applied.description ? ` · ${discount.applied.description}` : ""}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          discount.clear();
+                          setManualOpen(true);
+                        }}
+                        className="text-muted-foreground hover:text-foreground p-1"
+                        aria-label={t("checkout.discount.remove")}
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {!manualOpen ? (
+                        <button
+                          type="button"
+                          onClick={() => setManualOpen(true)}
+                          className="text-sm text-menu-teal underline font-body"
+                        >
+                          {t("checkout.discount.haveCode")}
+                        </button>
+                      ) : (
+                        <>
+                          <div className="flex gap-2">
+                            <Input
+                              value={discount.code}
+                              onChange={(e) => discount.setCode(e.target.value.toUpperCase())}
+                              placeholder={t("checkout.discount.placeholder")}
+                              maxLength={40}
+                            />
+                            <Button
+                              type="button"
+                              onClick={() => discount.apply(discount.code)}
+                              disabled={discount.loading || !discount.code.trim()}
+                            >
+                              {discount.loading ? "…" : t("checkout.discount.apply")}
+                            </Button>
+                          </div>
+                          {discount.error && (
+                            <p className="text-sm text-destructive font-body">
+                              {t(`checkout.discount.errors.${discount.error as DiscountReason}`)}
+                            </p>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <Button
                 type="submit"
                 disabled={loading}
@@ -1150,7 +1243,7 @@ const Checkout = () => {
               >
                 {loading
                   ? t("checkout.processing")
-                  : `${t("checkout.confirmOrder")} · ${totalPrice.toFixed(2)} €`}
+                  : `${t("checkout.confirmOrder")} · ${finalTotal.toFixed(2)} €`}
               </Button>
             </form>
 
@@ -1255,11 +1348,23 @@ const Checkout = () => {
                   })}
                 </div>
 
-                <div className="px-5 py-4 border-t border-border bg-muted/30">
+                <div className="px-5 py-4 border-t border-border bg-muted/30 space-y-1.5">
+                  {discount.applied && (
+                    <>
+                      <div className="flex justify-between items-center text-sm font-body text-muted-foreground">
+                        <span>{t("checkout.discount.subtotal")}</span>
+                        <span>{totalPrice.toFixed(2)} €</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm font-body text-menu-teal">
+                        <span>{discount.applied.code}</span>
+                        <span>−{discount.applied.discount_amount.toFixed(2)} €</span>
+                      </div>
+                    </>
+                  )}
                   <div className="flex justify-between items-center">
                     <span className="font-display font-bold text-base">{t("cart.total")}</span>
                     <span className="font-display text-2xl font-bold text-menu-teal">
-                      {totalPrice.toFixed(2)} €
+                      {finalTotal.toFixed(2)} €
                     </span>
                   </div>
                 </div>

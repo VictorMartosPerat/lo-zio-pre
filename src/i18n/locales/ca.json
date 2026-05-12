@@ -207,7 +207,13 @@
     "passwordTooShort": "La contrasenya ha de tenir almenys 6 caràcters",
     "passwordChanged": "Contrasenya actualitzada correctament!",
     "passwordChangeError": "Error en canviar la contrasenya",
-    "changingPassword": "Canviant..."
+    "changingPassword": "Canviant...",
+    "discounts": {
+      "title": "Els meus cupons",
+      "useNow": "Fer servir ara",
+      "expires": "Caduca {{date}}",
+      "min": "Mín. {{amount}} €"
+    }
   },
   "cart": {
     "title": "La Teva Comanda",
@@ -294,7 +300,28 @@
     "stripeSecure": "Pagament segur gestionat per Stripe",
     "stripeNotLoaded": "El sistema de pagament no està disponible. Recarrega la pàgina.",
     "stripeError": "Error en el pagament. Revisa les dades de la teva targeta.",
-    "addressSuggestionHint": "Suggeriment orientatiu — verifica l'adreça abans de confirmar"
+    "addressSuggestionHint": "Suggeriment orientatiu — verifica l'adreça abans de confirmar",
+    "discount": {
+      "title": "Tens un codi de descompte?",
+      "haveCode": "Aplicar un codi",
+      "placeholder": "Codi",
+      "apply": "Aplicar",
+      "remove": "Treure",
+      "appliedAuto": "Aplicat automàticament",
+      "appliedManual": "Aplicat",
+      "subtotal": "Subtotal",
+      "errors": {
+        "not_logged_in": "Inicia sessió per fer servir descomptes.",
+        "unknown_code": "Codi no vàlid.",
+        "inactive": "Aquest descompte està desactivat.",
+        "expired": "Aquest descompte ha caducat.",
+        "usage_limit_reached": "No queden usos disponibles.",
+        "min_order_not_met": "No arribes al mínim de comanda.",
+        "already_used": "Ja has fet servir aquest descompte.",
+        "not_assigned": "Aquest descompte no està disponible per al teu compte.",
+        "rate_limited": "Massa intents. Espera un minut."
+      }
+    }
   },
   "admin": {
     "title": "Panell d'Administració",

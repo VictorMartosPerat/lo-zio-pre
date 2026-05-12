@@ -399,3 +399,15 @@ User-resolved on 2026-05-10:
 - When a rule is **modified**, update its body and append `(updated YYYY-MM-DD)` after the rule ID.
 - When a rule is **deprecated/removed**, do NOT renumber. Mark as `~~R-XXX-NNN~~ (removed YYYY-MM-DD)` and explain why. New rules get the next free number.
 - When you find a bug that contradicts a rule, file an issue referencing the rule ID.
+
+## R-DISC-* (Discounts)
+
+- R-DISC-001: Admin can CRUD discounts. Once a discount has any rows in `discount_redemptions`, hard DELETE is blocked by the FK; the admin UI shows "Desactivar" (sets `is_active=false`) instead.
+- R-DISC-002: Discounts require `auth.uid() IS NOT NULL` at the validation RPC and at the BEFORE INSERT trigger on `orders`. Anonymous callers cannot redeem.
+- R-DISC-003: Single-use enforcement is the partial unique index `discount_redemptions_one_per_user`. No separate counter.
+- R-DISC-004: Server-side recompute of `discount_amount` in `apply_discount_to_order`. Client value is overridden. Mirrors R-ITEM-003.
+- R-DISC-005: `create-payment-intent` independently re-validates the attached discount. An expired discount aborts payment with a specific error; no silent fallback to full price.
+- R-DISC-006: `refund-order` unconditionally clears `cancelled_at`. The validation RPC rejects expired discounts at next use.
+- R-DISC-007: RLS — anon: no read/write on any of the three discount tables. Authenticated user: SELECT own assignments + redemptions; SELECT active discounts. Admin: full access. Service role only writes `cancelled_at`.
+- R-DISC-008: Partial refunds do not restore discount eligibility (v1 ships full refunds only).
+- R-DISC-009: `validate_discount_preview` rate-limits to 10 invalid attempts per user per minute.

@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
+import { MyDiscountsSection } from "@/components/MyDiscountsSection";
 import { EU_ALLERGENS } from "@/lib/allergens";
 
 const Profile = () => {
@@ -167,6 +168,8 @@ const Profile = () => {
               </p>
             </div>
           </div>
+
+          <MyDiscountsSection />
 
           <div className="bg-card rounded-lg p-8 shadow-lg border border-border">
             <form onSubmit={handleSubmit} className="space-y-5">
