@@ -26,6 +26,7 @@ import AdminReviews from "@/components/AdminReviews";
 import AdminMedia from "@/components/AdminMedia";
 import AdminProducts from "@/components/AdminProducts";
 import AdminUserRoles from "@/components/AdminUserRoles";
+import AdminDiscounts from "@/components/AdminDiscounts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
