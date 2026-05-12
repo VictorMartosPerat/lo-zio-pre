@@ -402,45 +402,65 @@ const Checkout = () => {
       // The order will be assigned in OrderConfirmation when payment_status flips to "paid".
       const isStripe = form.paymentMethod === "stripe";
 
-      // 1. Create order in Supabase. Select the full row back so we can pass
-      // it via router state to OrderConfirmation — guests have no SELECT policy
-      // on orders, so re-reading from the confirmation page would otherwise fail.
-      const { data: order, error: orderError } = await supabase
-        .from("orders")
-        .insert({
-          user_id: user?.id || null,
-          guest_name: form.name,
-          guest_email: form.email,
-          guest_phone: form.phone,
-          order_type: form.orderType,
-          pickup_store: assignedStore,
-          assigned_to: isStripe ? null : assignedTo,
-          delivery_address: form.orderType === "delivery"
-            ? [
-                form.address,
-                form.portal ? `Portal ${form.portal}` : null,
-                form.staircase ? `Esc. ${form.staircase}` : null,
-                form.floor ? `Piso ${form.floor}` : null,
-                form.door ? `Puerta ${form.door}` : null,
-              ].filter(Boolean).join(", ")
-            : null,
-          delivery_city: form.orderType === "delivery" ? form.city : null,
-          delivery_postal_code: form.orderType === "delivery" ? form.postalCode : null,
-          payment_method: form.paymentMethod,
-          payment_status: "pending",
-          notes: [
-            form.notes,
-            form.orderType === "delivery" && form.deliveryNotes
-              ? `🛵 Repartidor: ${form.deliveryNotes}`
-              : null,
-          ].filter(Boolean).join(" — ") || null,
-          total_amount: totalPrice,
-          scheduled_for: scheduledFor ? scheduledFor.toISOString() : null,
-        })
-        .select("*")
-        .single();
+      // 1. Create order in Supabase.
+      // Guests (anon) have no SELECT policy on `orders`, so `.insert().select()`
+      // would fail with 401 after a successful insert (PostgREST tries to read
+      // back the row to return it). To keep guest checkout working we generate
+      // the order id client-side and only `.select()` when the user is logged in.
+      const orderId = (typeof crypto !== "undefined" && "randomUUID" in crypto)
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-      if (orderError) throw orderError;
+      const orderPayload = {
+        id: orderId,
+        user_id: user?.id || null,
+        guest_name: form.name,
+        guest_email: form.email,
+        guest_phone: form.phone,
+        order_type: form.orderType,
+        pickup_store: assignedStore,
+        assigned_to: isStripe ? null : assignedTo,
+        delivery_address: form.orderType === "delivery"
+          ? [
+              form.address,
+              form.portal ? `Portal ${form.portal}` : null,
+              form.staircase ? `Esc. ${form.staircase}` : null,
+              form.floor ? `Piso ${form.floor}` : null,
+              form.door ? `Puerta ${form.door}` : null,
+            ].filter(Boolean).join(", ")
+          : null,
+        delivery_city: form.orderType === "delivery" ? form.city : null,
+        delivery_postal_code: form.orderType === "delivery" ? form.postalCode : null,
+        payment_method: form.paymentMethod,
+        payment_status: "pending" as const,
+        status: "pending" as const,
+        notes: [
+          form.notes,
+          form.orderType === "delivery" && form.deliveryNotes
+            ? `🛵 Repartidor: ${form.deliveryNotes}`
+            : null,
+        ].filter(Boolean).join(" — ") || null,
+        total_amount: totalPrice,
+        scheduled_for: scheduledFor ? scheduledFor.toISOString() : null,
+      };
+
+      let order: any;
+      if (user) {
+        const { data, error: orderError } = await supabase
+          .from("orders")
+          .insert(orderPayload)
+          .select("*")
+          .single();
+        if (orderError) throw orderError;
+        order = data;
+      } else {
+        // Guest path: insert WITHOUT .select() to avoid the post-insert RLS read.
+        const { error: orderError } = await supabase
+          .from("orders")
+          .insert(orderPayload);
+        if (orderError) throw orderError;
+        order = { ...orderPayload, created_at: new Date().toISOString() };
+      }
 
       // 2. Insert order items (including extras as part of description)
       const orderItems = items.map((item) => {
@@ -462,11 +482,23 @@ const Checkout = () => {
           total_price: item.price * item.quantity + extrasPrice,
         };
       });
-      const { data: insertedItems, error: itemsError } = await supabase
-        .from("order_items")
-        .insert(orderItems)
-        .select("*");
-      if (itemsError) throw itemsError;
+      let insertedItems: any[] = [];
+      if (user) {
+        const { data, error: itemsError } = await supabase
+          .from("order_items")
+          .insert(orderItems)
+          .select("*");
+        if (itemsError) throw itemsError;
+        insertedItems = data ?? [];
+      } else {
+        // Guest path: no SELECT policy on order_items for anon — skip .select()
+        // and reuse the local payload for the confirmation screen.
+        const { error: itemsError } = await supabase
+          .from("order_items")
+          .insert(orderItems);
+        if (itemsError) throw itemsError;
+        insertedItems = orderItems.map((it, idx) => ({ ...it, id: `local-${idx}` }));
+      }
 
       // NOTE: No email is sent on order creation.
       // Customer emails are sent only when the order is confirmed or cancelled,
