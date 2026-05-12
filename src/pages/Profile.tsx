@@ -168,6 +168,8 @@ const Profile = () => {
             </div>
           </div>
 
+          <MyDiscountsSection />
+
           <div className="bg-card rounded-lg p-8 shadow-lg border border-border">
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
