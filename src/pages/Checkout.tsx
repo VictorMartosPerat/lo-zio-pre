@@ -482,11 +482,23 @@ const Checkout = () => {
           total_price: item.price * item.quantity + extrasPrice,
         };
       });
-      const { data: insertedItems, error: itemsError } = await supabase
-        .from("order_items")
-        .insert(orderItems)
-        .select("*");
-      if (itemsError) throw itemsError;
+      let insertedItems: any[] = [];
+      if (user) {
+        const { data, error: itemsError } = await supabase
+          .from("order_items")
+          .insert(orderItems)
+          .select("*");
+        if (itemsError) throw itemsError;
+        insertedItems = data ?? [];
+      } else {
+        // Guest path: no SELECT policy on order_items for anon — skip .select()
+        // and reuse the local payload for the confirmation screen.
+        const { error: itemsError } = await supabase
+          .from("order_items")
+          .insert(orderItems);
+        if (itemsError) throw itemsError;
+        insertedItems = orderItems.map((it, idx) => ({ ...it, id: `local-${idx}` }));
+      }
 
       // NOTE: No email is sent on order creation.
       // Customer emails are sent only when the order is confirmed or cancelled,
