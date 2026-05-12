@@ -14,6 +14,146 @@ export type Database = {
   }
   public: {
     Tables: {
+      discount_assignments: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          discount_id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          discount_id: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          discount_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discount_assignments_discount_id_fkey"
+            columns: ["discount_id"]
+            isOneToOne: false
+            referencedRelation: "discounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discount_redemptions: {
+        Row: {
+          cancelled_at: string | null
+          discount_amount: number
+          discount_id: string
+          id: string
+          order_id: string | null
+          redeemed_at: string
+          user_id: string
+        }
+        Insert: {
+          cancelled_at?: string | null
+          discount_amount: number
+          discount_id: string
+          id?: string
+          order_id?: string | null
+          redeemed_at?: string
+          user_id: string
+        }
+        Update: {
+          cancelled_at?: string | null
+          discount_amount?: number
+          discount_id?: string
+          id?: string
+          order_id?: string | null
+          redeemed_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discount_redemptions_discount_id_fkey"
+            columns: ["discount_id"]
+            isOneToOne: false
+            referencedRelation: "discounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discount_redemptions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discount_validation_attempts: {
+        Row: {
+          attempt_minute: string
+          attempts: number
+          user_id: string
+        }
+        Insert: {
+          attempt_minute: string
+          attempts?: number
+          user_id: string
+        }
+        Update: {
+          attempt_minute?: string
+          attempts?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      discounts: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          discount_type: string
+          discount_value: number
+          expires_at: string
+          id: string
+          is_active: boolean
+          min_order_amount: number | null
+          name: string
+          updated_at: string
+          usage_limit: number | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          discount_type: string
+          discount_value: number
+          expires_at: string
+          id?: string
+          is_active?: boolean
+          min_order_amount?: number | null
+          name: string
+          updated_at?: string
+          usage_limit?: number | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string
+          id?: string
+          is_active?: boolean
+          min_order_amount?: number | null
+          name?: string
+          updated_at?: string
+          usage_limit?: number | null
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -228,6 +368,8 @@ export type Database = {
           delivery_address: string | null
           delivery_city: string | null
           delivery_postal_code: string | null
+          discount_amount: number
+          discount_id: string | null
           estimated_time: number | null
           guest_email: string
           guest_name: string
@@ -243,6 +385,7 @@ export type Database = {
           status: string
           stripe_payment_intent_id: string | null
           stripe_session_id: string | null
+          subtotal_amount: number | null
           total_amount: number
           transferred_from: string | null
           user_id: string | null
@@ -254,6 +397,8 @@ export type Database = {
           delivery_address?: string | null
           delivery_city?: string | null
           delivery_postal_code?: string | null
+          discount_amount?: number
+          discount_id?: string | null
           estimated_time?: number | null
           guest_email: string
           guest_name: string
@@ -269,6 +414,7 @@ export type Database = {
           status?: string
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
+          subtotal_amount?: number | null
           total_amount?: number
           transferred_from?: string | null
           user_id?: string | null
@@ -280,6 +426,8 @@ export type Database = {
           delivery_address?: string | null
           delivery_city?: string | null
           delivery_postal_code?: string | null
+          discount_amount?: number
+          discount_id?: string | null
           estimated_time?: number | null
           guest_email?: string
           guest_name?: string
@@ -295,11 +443,20 @@ export type Database = {
           status?: string
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
+          subtotal_amount?: number | null
           total_amount?: number
           transferred_from?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orders_discount_id_fkey"
+            columns: ["discount_id"]
+            isOneToOne: false
+            referencedRelation: "discounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -583,6 +740,10 @@ export type Database = {
         Returns: Json
       }
       can_insert_order_item: { Args: { _order_id: string }; Returns: boolean }
+      compute_discount_amount: {
+        Args: { _subtotal: number; _type: string; _value: number }
+        Returns: number
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -609,12 +770,29 @@ export type Database = {
         }
         Returns: string[]
       }
+      get_best_assigned_discount: {
+        Args: { p_subtotal: number }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      list_my_discounts: {
+        Args: never
+        Returns: {
+          code: string
+          description: string
+          discount_type: string
+          discount_value: number
+          expires_at: string
+          id: string
+          min_order_amount: number
+          name: string
+        }[]
       }
       list_users_with_roles: {
         Args: never
@@ -642,6 +820,10 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      validate_discount_preview: {
+        Args: { p_code: string; p_subtotal: number }
+        Returns: Json
       }
     }
     Enums: {
