@@ -582,6 +582,7 @@ export type Database = {
         }
         Returns: Json
       }
+      can_insert_order_item: { Args: { _order_id: string }; Returns: boolean }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
