@@ -67,9 +67,9 @@ const HeroSection = () => {
           >
             <div className="relative z-10 flex flex-col items-center justify-center h-full p-6 text-center">
               <UtensilsCrossed className="w-10 h-10 md:w-12 md:h-12 text-primary mb-3 group-hover:scale-110 transition-transform" />
-              <h2 className="font-display text-2xl md:text-3xl font-bold text-primary-foreground mb-1">
+              <h1 className="font-display text-2xl md:text-3xl font-bold text-primary-foreground mb-1">
                 {t("hero.cta")}
-              </h2>
+              </h1>
               <p className="text-primary-foreground/60 text-sm font-body">
                 {t("hero.reserveSubtitle", "Reserva en nuestras pizzerías de Tarragona")}
               </p>

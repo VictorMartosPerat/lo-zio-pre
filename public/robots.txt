@@ -12,3 +12,14 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /perfil
+Disallow: /mis-reservas
+Disallow: /mis-pedidos
+Disallow: /pedido
+Disallow: /pedido-confirmado
+Disallow: /reset-password
+Disallow: /unsubscribe
+Disallow: /auth
+
+Sitemap: https://pizzerialozio.com/sitemap.xml

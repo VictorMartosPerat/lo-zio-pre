@@ -62,7 +62,7 @@ const LocationDetail = () => {
       opens: h.opens,
       closes: h.closes,
     })),
-    url: `https://lozio-table-booker.lovable.app/locales/${location.slug}`,
+    url: `https://pizzerialozio.com/locales/${location.slug}`,
   };
 
   return (
@@ -70,7 +70,7 @@ const LocationDetail = () => {
       <Helmet>
         <title>{`${location.name} — ${location.type} en Tarragona`}</title>
         <meta name="description" content={location.description} />
-        <link rel="canonical" href={`https://lozio-table-booker.lovable.app/locales/${location.slug}`} />
+        <link rel="canonical" href={`https://pizzerialozio.com/locales/${location.slug}`} />
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>
 
