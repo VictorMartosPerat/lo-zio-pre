@@ -17,6 +17,14 @@ const Index = () => {
 
   return (
     <div className="relative" style={{ overflowX: "clip" }}>
+      <Helmet>
+        <title>Pizzería Lo Zio Tarragona — Pizza italiana artesanal · Reservas y delivery</title>
+        <meta name="description" content="Pizzería Lo Zio en Tarragona: pizza italiana artesanal al horno, ingredientes frescos, reservas online y entrega a domicilio. Tres locales en Tarragona." />
+        <link rel="canonical" href="https://pizzerialozio.com/" />
+        <meta property="og:title" content="Pizzería Lo Zio Tarragona — Pizza italiana artesanal" />
+        <meta property="og:description" content="Pizza italiana artesanal en Tarragona. Reserva mesa o pide a domicilio." />
+        <meta property="og:url" content="https://pizzerialozio.com/" />
+      </Helmet>
       <PullToRefreshIndicator pullDistance={pullDistance} refreshing={refreshing} />
       <TestEnvBanner />
       <Navbar />

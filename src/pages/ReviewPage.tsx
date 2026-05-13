@@ -51,6 +51,12 @@ const ReviewPage = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <Helmet>
+        <title>Deja tu reseña — Pizzeria Lo Zio Tarragona</title>
+        <meta name="description" content="Cuéntanos qué te ha parecido tu experiencia en Pizzeria Lo Zio Tarragona. Tu opinión nos ayuda a mejorar." />
+        <link rel="canonical" href="https://pizzerialozio.com/resenas" />
+        <meta name="robots" content="noindex, follow" />
+      </Helmet>
       {/* Header */}
       <div className="relative bg-foreground px-6 pt-10 pb-8 text-center">
         <div className="absolute top-4 right-4">
