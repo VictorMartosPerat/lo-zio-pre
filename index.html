@@ -26,6 +26,45 @@
     <meta name="twitter:title" content="Pizzeria Lo Zio PRE">
     <meta property="og:description" content="Pizzeria Lo Zio: pizza artesanal italiana. Reserva mesa en nuestros dos locales. Tradición familiar con ingredientes frescos.">
     <meta name="twitter:description" content="Pizzeria Lo Zio: pizza artesanal italiana. Reserva mesa en nuestros dos locales. Tradición familiar con ingredientes frescos.">
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Restaurant",
+        "@id": "https://pizzerialozio.com/#restaurant",
+        "name": "Pizzeria Lo Zio",
+        "description": "Pizzería artesanal italiana en Tarragona. Pizza al horno, ingredientes frescos, tradición familiar.",
+        "url": "https://pizzerialozio.com",
+        "telephone": "+34 687 605 647",
+        "servesCuisine": ["Italian", "Pizza"],
+        "priceRange": "€€",
+        "image": "https://pizzerialozio.com/logo_app_inicio.png",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Carrer Reding 32 Bajos",
+          "addressLocality": "Tarragona",
+          "postalCode": "43001",
+          "addressCountry": "ES"
+        },
+        "geo": {
+          "@type": "GeoCoordinates",
+          "latitude": 41.1218819,
+          "longitude": 1.2680747
+        },
+        "openingHoursSpecification": [
+          {
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": ["Monday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+            "opens": "19:00",
+            "closes": "23:30"
+          }
+        ],
+        "acceptsReservations": "True",
+        "hasMenu": "https://pizzerialozio.com/#menu",
+        "sameAs": [
+          "https://www.google.com/maps/place/Pizzeria+Lo+Zio"
+        ]
+      }
+    </script>
     <meta
       http-equiv="Content-Security-Policy"
       content="default-src 'self'; script-src 'self' https://js.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://*.supabase.co https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev; media-src 'self' https://*.supabase.co; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://nominatim.openstreetmap.org; frame-src https://js.stripe.com https://www.google.com; worker-src 'self'; object-src 'none'; base-uri 'self';"
