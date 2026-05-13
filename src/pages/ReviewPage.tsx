@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { Star, Send, Heart, UtensilsCrossed } from "lucide-react";
 import { Button } from "@/components/ui/button";
