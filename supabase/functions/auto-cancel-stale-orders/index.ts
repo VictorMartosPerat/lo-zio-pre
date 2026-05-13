@@ -1,6 +1,13 @@
 // Auto-cancels pending orders 3h after their effective time
 // (scheduled_for if set, otherwise created_at). verify_jwt = false:
 // invoked exclusively by pg_cron via net.http_post with service-role bearer.
+//
+// ASSUMPTION (2026-05-13): we trust the frontend (Checkout + getScheduleStatus
+// in src/lib/storeHours.ts) to block ASAP orders when no store is open. So
+// effective_time = created_at is safe for ASAP. If that guard ever fails,
+// an out-of-hours ASAP order will be auto-cancelled 3h after creation —
+// possibly before the store ever opens. Revisit by computing
+// max(created_at, next_store_opening) per pickup_store/assigned_to here.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
