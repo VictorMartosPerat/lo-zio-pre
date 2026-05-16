@@ -332,14 +332,22 @@ const Admin = () => {
     return format(d, "EEEE d 'de' MMMM", { locale: es });
   };
 
+  const ONLINE_TABLE_NAMES = ["Mesa 1","Mesa 2","Mesa 3","Mesa 4","Mesa 5","Mesa 6","Mesa 7","Mesa 8"];
+
   const renderReservationCard = (r: GroupedReservation) => {
     const st = statusLabels[r.status] || statusLabels.pending;
     const tableLabel = r.tableIds
       .map((id) => tableNames[id])
       .filter(Boolean)
       .join(" + ");
+    const isManual = r.tableIds.length > 0 && r.tableIds.every(
+      (id) => tableNames[id] && !ONLINE_TABLE_NAMES.includes(tableNames[id])
+    );
     return (
-      <div key={r.allIds.join("-")} className="bg-card rounded-lg border border-border p-4 flex flex-col sm:flex-row sm:items-center gap-3 hover:bg-muted/30 transition-colors">
+      <div
+        key={r.allIds.join("-")}
+        className={`bg-card rounded-lg p-4 flex flex-col sm:flex-row sm:items-center gap-3 hover:bg-muted/30 transition-colors ${isManual ? "border-2 border-blue-500" : "border border-border"}`}
+      >
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="text-center shrink-0 w-14">
             <p className="font-display text-lg font-bold text-foreground leading-none">{r.reservation_time.substring(0, 5)}</p>
